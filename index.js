@@ -18,7 +18,7 @@ world.loadingManager.loadGLTF('build/assets/boxman.glb', (model) =>
 document.addEventListener('click', () => {
     let player = world.characters[0];
     // Load the Soldier model
-    new GLTFLoader().load('https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/6eeefb2d52f1cee9137756bb0ab7927536d602ca/tmp3gb6pmmh.glb', (gltf) => {
+    new GLTFLoader().load('https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/04a7cf6cfac4ad7d71902609cb64582147b696ce/tmpyuyd4xq_.glb', (gltf) => {
         let soldier = gltf.scene;
       //  soldier.scale.set(0.1, 0.1, 0.1); // Scale down the soldier model
 

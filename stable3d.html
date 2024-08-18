@@ -1,5 +1,7 @@
 <body>
   <script>
+    
+    
     const form = document.createElement('form');
     form.enctype = 'multipart/form-data';
     form.method = 'POST';
@@ -67,10 +69,10 @@
           data: [
             "Remove Background",
             {
-              path: "/tmp/gradio/c3bdddea98db660e6a0a2da2f368609acdac3ac5/CamtasiaStudio_vkPjMTGb9p.png",
-              url: "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/c3bdddea98db660e6a0a2da2f368609acdac3ac5/CamtasiaStudio_vkPjMTGb9p.png",
-              orig_name: "CamtasiaStudio_vkPjMTGb9p.png",
-              size: 1202653,
+              path: filePaths[0],
+              url: "https://stabilityai-stable-fast-3d.hf.space/file=" + filePaths[0],
+              orig_name: filePaths[0].split("/").pop(),
+              size: formData.get('files').size,
               mime_type: "image/png",
               meta: {
                 _type: "gradio.FileData"
@@ -128,10 +130,10 @@
     data: [
       "Run",
       {
-        path: "/tmp/gradio/c3bdddea98db660e6a0a2da2f368609acdac3ac5/CamtasiaStudio_vkPjMTGb9p.png",
-        url: "https://stabilityai-stable-fast-3d.hf.space/file=/tmp/gradio/c3bdddea98db660e6a0a2da2f368609acdac3ac5/CamtasiaStudio_vkPjMTGb9p.png",
-        orig_name: "CamtasiaStudio_vkPjMTGb9p.png",
-        size: 1202653,
+        path: filePaths[0],
+        url: "https://stabilityai-stable-fast-3d.hf.space/file=" + filePaths[0],
+        orig_name: filePaths[0].split("/").pop(),
+        size: formData.get('files').size,
         mime_type: "image/png",
         meta: { _type: "gradio.FileData" }
       },
@@ -174,7 +176,7 @@
 
 
 
-      
+
     });
 
 
