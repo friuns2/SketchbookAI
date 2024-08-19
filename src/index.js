@@ -1,4 +1,3 @@
-let code = '';
 
 fetch('src/code.js').then(response => response.text()).then(a => code = a);
 Vue.config.silent = true;
@@ -10,7 +9,8 @@ let chat = new Vue({
         inputText: '',
         lastText: '',
         messages: [],        
-       isLoading: false,
+        isLoading: false,
+        snapshots: [],
         suggestions: ['Add a red cube', 'Create a bouncing ball', 'Generate a 3D tree'],
         async sendInput() {
             
@@ -28,11 +28,11 @@ let chat = new Vue({
             this.isLoading = true;
             try {
 
-                const worldDtsContent = await fetch('build/types/index.d.ts').then(response => response.text());
+                const worldDtsContent = await fetch('build/types/world/World.d.ts').then(response => response.text());
                 const response = await getChatGPTResponse({
                     messages: [
                         { role: "system", content: settings.rules },
-                        { role: "user", content: `index.d.ts file:\n${worldDtsContent}\n\nCurrent code:\n${code}\n\nUpdate code below, my position: ${playerLookPoint}, Write JavaScript code that will; ${this.lastText}` }
+                        { role: "user", content: `world.d.ts file for reference:\n${worldDtsContent}\n\nCurrent code:\n${code}\n\nUpdate code below, sample position: ${playerLookPoint}, Rewrite JavaScript code that will; ${this.lastText}` }
                     ],
                     signal: this.abortController.signal
                 });
@@ -44,7 +44,7 @@ let chat = new Vue({
                 let files = await parseFilesFromMessage(floatingCode.textContent);
                 let content = files.files[0].content.substring(files.files[0].content.indexOf('player.takeControl();'));
                 console.log(content);
-                eval(content.replace(/\b(const|let)\b/g, 'var'));
+                (0,eval)(content.replace(/\b(const|let)\b/g, 'var'));
                 code = content;
                 if (this.messages[this.messages.length - 1] != this.lastText) {
                     this.messages.push(this.lastText);
