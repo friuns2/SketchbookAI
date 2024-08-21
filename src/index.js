@@ -41,6 +41,9 @@ let chat = {
         });
         
     },
+    onClickError(){
+        this.inputText = this.params.lastText + '\nPrevious atempt Error: ' + this.lastError;
+    },
     async undoLastAction() {
 
         this.messages.pop();
@@ -140,6 +143,10 @@ window.addEventListener('unhandledrejection', function(event) {
         chat.lastError = String(event.reason);
     }
     event.preventDefault();
+});
+window.addEventListener('error', function (event) {
+    chat.lastError = event.error.message;
+    console.error(chat.lastError);
 });
 
 

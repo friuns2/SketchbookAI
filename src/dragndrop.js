@@ -45,7 +45,7 @@
                         animationsCode += `${modelName}["${clip.name}"] = ${modelName}.mixer.clipAction(${modelName}.animations.find(a => a.name === "${clip.name}"));\n`;
                     });
                 }
-                Eval(chat.params.code, `let ${modelName} = await loadModel({ glbUrl: "${fileName}", pos: ${JSON.stringify(intersectionPoint)} });\n${animationsCode}`);
+                Eval(chat.params.code, `let ${modelName} = await ${loadGLB.name}({ glbUrl: "${fileName}"});\n${animationsCode}\n${modelName}.scene.position.copy(${JSON.stringify(intersectionPoint)});`);
 
             };
             reader.readAsArrayBuffer(file);

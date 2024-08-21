@@ -1,19 +1,13 @@
-function loadModel({ glbUrl, pos }) {
-    return new Promise((resolve, reject) => {
-        new GLTFLoader().load(
-            glbUrl,
-            (gltf) => {
-                gltf.scene.position.copy(pos);
-                world.graphicsWorld.add(gltf.scene);
-                resolve(gltf);
-            },
-            undefined,
-            (error) => {
-                console.error('Error loading model:', error);
-                reject(error);
-            }
-        );
-    });
+function loadGLB({ glbUrl }) {
+    return new Promise((resolve, reject) => 
+        new GLTFLoader().load(glbUrl, gltf => {
+            world.graphicsWorld.add(gltf.scene);
+            resolve(gltf);
+        }, undefined, error => {
+            console.error('Error loading model:', error);
+            reject(error);
+        })
+    );
 }
 function extendMethod(object, methodName, extension) {
     const originalMethod = object[methodName];
