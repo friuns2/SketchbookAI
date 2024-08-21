@@ -1,56 +1,24 @@
-<html>
-
 <body>
-    <div id="app">  </div>
-    <script src="https://unpkg.com/acorn/dist/acorn.js"></script>
-    <script src="https://unpkg.com/acorn-walk/dist/walk.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
-    <script src="test.js">
-        function takeSnapshot(code, context) {
-            const ast = acorn.parse(code, { ecmaVersion: 2020 });
-            const modifiedVariables = [];
-
-            acorn.walk.simple(ast, {
-                CallExpression(node) {
-                    if (node.callee.type === 'MemberExpression') {
-                        modifiedVariables.push(node.callee.object.name);
-                    }
-                },
-                AssignmentExpression(node) {
-                    if (node.left.type === 'Identifier') {
-                        modifiedVariables.push(node.left.name);
-                    }
-                },
-            });
-
-            const snapshot = {};
-            modifiedVariables.forEach(variable => {
-                snapshot[variable] = Array.isArray(context[variable])
-                    ? [...context[variable]]
-                    : context[variable];
-            });
-
-            return snapshot;
-        }
-
-        function undo(snapshot, context) {
-            Object.entries(snapshot).forEach(([variable, value]) => {
-                context[variable] = value;
-            });
-        }
-
-        // Example usage
-        var test = [];
-        var test2 = 1;
-        let code = "test.push(1);test2=test2+1;";
-        const s = takeSnapshot(code, window);
-        eval(code);
-        console.log(test); // Output: [1]
-        console.log(test2); // Output: 2
-
-        undo(s, window);
-        console.log(test); // Output: []
-        console.log(test2); // Output: 1
-    </script>
+    <button id="myButton">Click me</button>
 </body>
+<script>
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const handleClick = async () => {
+        for (let i = 0; i < 5; i++) 
+        {
+            await delay(i * 100);
+            const location = `location${i + 1}`;
+            // Set the document location to the generated URL
+            document.location.hash = location;
+        }
+        for (let i = 0; i < 5; i++) 
+        { await delay(i * 100);
+            window.history.back();
+            console.log(window.location.hash);
+        }
+    };
+
+    // Assuming there's a button with the ID 'myButton'
+    document.getElementById('myButton').addEventListener('click', handleClick);
+</script>

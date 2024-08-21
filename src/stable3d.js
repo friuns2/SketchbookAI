@@ -10,7 +10,7 @@ const input = document.createElement('input');
         const v = input.value || 'trump';
         input.value = '';
         const glbUrl = await GenerateGLB(v);
-        if (glbUrl) loadModel(glbUrl);
+        if (glbUrl) loadModel({ glbUrl, pos: new THREE.Vector3(), mass: 0 });
         else console.error('Failed to generate GLB URL');
     });
 

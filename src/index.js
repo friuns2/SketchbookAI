@@ -1,10 +1,11 @@
-originalConsoleError = console.error;
+
 //Vue.config.silent = true;
 let chat = {
 
     abortController: null,
     inputText: '',
     window: window,
+    document: document,
     isLoading: false,
     params: {
         messages: [],
@@ -15,7 +16,7 @@ let chat = {
         },
         lastText: ''        
     },
-    
+    isCursorLocked:false,
     get messages(){
         return this.params.messages;
     },
@@ -25,6 +26,7 @@ let chat = {
     lastError: '',
     suggestions: ['Add a red cube', 'Create a bouncing ball', 'Generate a 3D tree'],
     async init() {
+        document.addEventListener('pointerlockchange', () => this.isCursorLocked = !!document.pointerLockElement);
         globalThis.world = new World();
         await world.initialize('build/assets/world.glb');
         globalThis.player = world.characters[0];
@@ -32,9 +34,11 @@ let chat = {
         player.takeControl();
         if (!this.params.code)
             this.Clear();
-        
-        EvalWithDebug(this.params.code);
 
+        Eval(this.params.code);
+        vue.$watch(() => this.params.lastText, (newValue) => {
+            document.title = newValue;
+        });
         
     },
     async undoLastAction() {
@@ -61,19 +65,29 @@ let chat = {
         this.abortController = new AbortController();
         this.isLoading = true;
         try {
-            const worldDtsContent = await fetch('build/types/world/World.d.ts').then(response => response.text());
-            const playerDtsContent = await fetch('build/types/characters/Character.d.ts').then(response => response.text());
+            const fileNames = [
+                'build/types/world/World.d.ts',
+//                'build/types/characters/Character.d.ts',
+                'src/helpers.js'
+            ];
+            
+            const fetchPromises = fileNames.map(path => 
+                fetch(path).then(response => response.text())
+                    .then(content => ({ name: path.split('/').pop(), content }))
+            );
+            
+            const filesMessage = (await Promise.all(fetchPromises)).map(file => `${file.name} file for reference:\`\`\`javascript\n${file.content}\n\`\`\``).join('\n\n');
             
             // Create a string with previous user messages
-            const previousUserMessages = this.messages.length && "Previous messages:\n" + this.messages
-                .filter(msg => msg.user)
-                .join('\n');
+            const previousUserMessages = chat.messages.length && ("<Previous_messages>\n" + chat.messages
+                .map(msg => msg.user)
+                .join('\n') + "\n</Previous_messages>");
             
             const response = await getChatGPTResponse({
                 messages: [
                     { role: "system", content: settings.rules },
-                    { role: "system", content: `world.d.ts file for reference:\`\`\`javascript\n${worldDtsContent}\n\`\`\`\n\nplayer.d.ts file for reference:\`\`\`javascript\n${playerDtsContent}\n\`\`\`` },
-                    { role: "user", content: `Previous messages:\n${previousUserMessages}\n\nCurrent code:\n\`\`\`javascript\n${this.params.code}\n\`\`\`\n\nUpdate code below, spawn position: ${playerLookPoint}, Rewrite JavaScript code that will; ${this.params.lastText}` }
+                    { role: "system", content: filesMessage },
+                    { role: "user", content: `${previousUserMessages}\n\nCurrent code:\n\`\`\`javascript\n${this.params.code}\n\`\`\`\n\nUpdate code below, spawn position: ${playerLookPoint}, Rewrite JavaScript code that will; ${this.params.lastText}` }
                 ],
                 signal: this.abortController.signal
             });
@@ -84,18 +98,15 @@ let chat = {
             console.log(floatingCode.textContent);
             let files = await parseFilesFromMessage(floatingCode.textContent);
             let content = files.files[0].content;
-            this.params.code = content;
             if (this.messages[this.messages.length - 1]?.user != this.params.lastText) {
                 this.messages.push({ user: this.params.lastText });
             }
             await EvalWithDebug(content);
         } catch (e) {
-
             var err = e.constructor('Error in Evaled Script: ' + e.message);
-            // +3 because `err` has the line number of the `eval` line plus two.
             let lineNumber = e.lineNumber - err.lineNumber + 3;
-            
             console.error("Error executing code:", e, lineNumber);
+            Eval(this.params.code);
 
 
         } finally {
@@ -115,34 +126,49 @@ let vue = chat = new Vue({
     watch,
     mounted
 });
+var originalConsoleError = console.error;
+console.error = (...args) => {
+    chat.lastError = args.join(' ');
+    originalConsoleError(...args);
+};
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Caught unhandled promise rejection:', event.reason);
+    if (event.reason instanceof Error) {
+        chat.lastError = `${event.reason.name}: ${event.reason.message}`;
+    } else {
+        chat.lastError = String(event.reason);
+    }
+    event.preventDefault();
+});
+
+
+
 async function EvalWithDebug(...content) {
-    chat.lastError = '';
-    console.error = (...args) => {
-        chat.lastError = args.join(' ');
-        originalConsoleError(...args);
-    };
-    Eval(...content);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await Eval(...content);    
     if (chat.lastError)
         throw new Error(chat.lastError);
 }
 
-function Eval(...content) {
+async function Eval(...contentArray) {
+    chat.lastError = '';
     Load();
-    if(content.includes("world.update = "))
-        throw new Error("world.update = function(){} is not allowed");
     
-    var code = "(async () => {"+content.map(c => c
-        .substring(c.indexOf('player.takeControl();'))
-        .replace(/\blet\b/g, 'var')
-        .replace(/\bconst\b/g, 'var'))
-        .join('\n')
-        + "})();";
-        //+ ";debugger;";
+    
+    var content = contentArray.join('\n');
+    if(content.includes("world.update = "))
+        throw new Error("direct assign world.update = function(){} is not allowed, use extendMethod");
+    var code = "(async () => {\n" + content
+        .substring(content.indexOf('player.takeControl();'))
+        .replace(/\b(let|const)\s+(\w+)\s*=/g, 'var $2 = globalThis.$2 =')        
+        + "\n})();"
+        //+ ";debugger;"
     console.log(code);
     (0, eval)(code);
-    chat.params.code = code;
-
+    await new Promise(resolve => setTimeout(resolve, 500));
+    if (!chat.lastError){
+        console.log("Execution success");
+        chat.params.code = content;
+    }
 }
 
 

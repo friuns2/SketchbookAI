@@ -32,7 +32,9 @@
                 raycaster.setFromCamera(mouse, world.camera);
                 const intersects = raycaster.intersectObjects(world.graphicsWorld.children, true);
                 const intersectionPoint = intersects[0].point;
-                Eval(chat.params.code, 'loadModel("' + fileName + '",' + JSON.stringify(intersectionPoint) + ')');
+                Eval(chat.params.code, 'var model = await loadModel({ glbUrl: "' + fileName + '", pos: ' + JSON.stringify(intersectionPoint) + ' })');
+                
+
             };
             reader.readAsArrayBuffer(file);
         } else if (file && file.name.endsWith('.js')) {

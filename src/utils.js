@@ -48,6 +48,7 @@ function InitVue(obj, args = {}) {
                     const hashParams = new URLSearchParams(window.location.hash.slice(1));
                     hashParams.set(key, JSON.stringify(newValue));
                     window.location.hash = hashParams.toString();
+                    //history.pushState(null, document.title, `#${hashParams.toString()}`);
                     if (updatedFromHash)
                         obj.params[key + "Changed"]?.call(obj);
                 };
@@ -114,4 +115,45 @@ function Load() {
     world.physicsWorld.bodies.push(...globalThis.snapshot.physicsWorld);
     world.updatables.length = 0;
     world.updatables.push(...globalThis.snapshot.updatables);
+}
+
+function loadModelWithPhysics({ glbUrl, pos, mass = 1 }) {
+    return new Promise((resolve, reject) => {
+        new GLTFLoader().load(glbUrl, (gltf) => {
+            const model = gltf.scene;
+
+            const boundingBox = new THREE.Box3().setFromObject(model);
+            const size = new THREE.Vector3().copy(boundingBox.getSize(new THREE.Vector3())).multiplyScalar(0.5);
+            const center = new THREE.Vector3();
+            boundingBox.getCenter(center);
+
+            class ModelWrapper extends THREE.Object3D {
+                updateOrder = 0;
+                collider = new BoxCollider({
+                    mass: mass,
+                    position: new THREE.Vector3().copy(pos).add(center),
+                    size: size,
+                    friction: 0.3
+                });
+
+                update() {
+                    this.position.copy(Utils.threeVector(this.collider.body.position));
+                    this.quaternion.copy(Utils.threeQuat(this.collider.body.quaternion));
+                }
+            }
+
+            const modelWrapper = new ModelWrapper();
+       
+            model.position.copy(center.negate());
+            modelWrapper.add(model);
+            
+            world.graphicsWorld.add(modelWrapper);
+            world.physicsWorld.add(modelWrapper.collider.body);
+            world.registerUpdatable(modelWrapper);
+
+            resolve(modelWrapper);
+        }, undefined, (error) => {
+            reject(error);
+        });
+    });
 }
