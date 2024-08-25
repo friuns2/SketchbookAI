@@ -15,8 +15,8 @@ async function EvalWithDebug(...content) {
 let lastEvalCode = '';
 async function Eval(...contentArray) 
 {   
-    Load();
-    await new Promise(requestAnimationFrame);
+    Reset();
+    await new Promise(resolve => setTimeout(resolve, 100));
     chat.variant.lastError = '';
     
     var content = contentArray.join('\n');
@@ -43,6 +43,8 @@ async function Eval(...contentArray)
 
 var originalConsoleError = console.error;
 console.error = (...args) => {
+    if (args[0].message === "The user has exited the lock before this request was completed.")
+        return;
     chat.variant.lastError = {
         url: args.map(arg => arg.target?.responseURL).find(a => a),
         message: args.map(arg => {

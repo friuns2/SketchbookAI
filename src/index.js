@@ -36,17 +36,17 @@ let chat = {
         document.addEventListener('pointerlockchange', () => this.isCursorLocked = !!document.pointerLockElement);
         //globalThis.world = new World();
         //await world.initialize('build/assets/world.glb');        
-        setTimeout(() => {
-            if (!this.variant.content)
-                this.Clear();
-            Save();
-            vue.$watch(() => this.params.lastText, (newValue) => {
-                document.title = newValue;
-            });
-        },100
-        );
+        while (!globalThis.player) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        if (!this.variant.content)
+            this.Clear();
         
-        
+        vue.$watch(() => this.params.lastText, (newValue) => {
+            document.title = newValue;
+        });
+
         //Eval(this.variant.files[0].content);
         
         

@@ -101,7 +101,7 @@ function InitVue(obj, args = {}) {
     return { messageWithoutCodeBlocks, files };
 }
 
-function Save() {
+function SaveReset() {
     globalThis.snapshot = {
         graphicsWorld: world.graphicsWorld.children.slice(),
         physicsWorld: world.physicsWorld.bodies.slice(),
@@ -110,10 +110,10 @@ function Save() {
         vehicles:world.vehicles.slice()
     };
 }
-function Load() {    
+function Reset() {    
     world.graphicsWorld.children.length = 0;
     world.graphicsWorld.children.push(...globalThis.snapshot.graphicsWorld);
-    world.physicsWorld.bodies.forEach(body => world.physicsWorld.remove(body));
+    [...world.physicsWorld.bodies].forEach(body => world.physicsWorld.remove(body));
     globalThis.snapshot.physicsWorld.forEach(body => world.physicsWorld.addBody(body));
     world.updatables.length = 0;
     world.updatables.push(...globalThis.snapshot.updatables);
@@ -328,7 +328,7 @@ GLTFLoader.prototype.load = function(url, onLoad, onProgress, onError, approxima
     });
 };
 
-function AutoScale(gltf, approximateScaleInMeters = 5) {
+function AutoScale(gltf, approximateScaleInMeters = 5,setpivot=1) {
     const model = gltf.scene;
     const boundingBox = new THREE.Box3().setFromObject(model);
     const size = new THREE.Vector3();
@@ -345,12 +345,27 @@ function AutoScale(gltf, approximateScaleInMeters = 5) {
         scaleFactor = 0.01;
     } else if (maxDimension > approximateScaleInMeters) {
         scaleFactor = 0.1;
-    } else
+    } else {
         scaleFactor = 1;
-
+    }
 
     // Apply the calculated scale to the model
     model.scale.setScalar(scaleFactor);
+
+    if (setpivot) {
+        // Center the model horizontally and place it on the floor
+        const center = boundingBox.getCenter(new THREE.Vector3());
+        model.position.x -= center.x*scaleFactor;
+        model.position.z -= center.z*scaleFactor;
+        model.position.y -= boundingBox.min.y*scaleFactor;
+
+        // Create a new parent object and add the model to it
+        const parent = new THREE.Object3D();
+        parent.add(model);
+
+        // Replace the original scene with the new parent
+        gltf.scene = parent;
+    }
 }
 
 function Object3DToHierarchy(gltf) {

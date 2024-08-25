@@ -53,18 +53,13 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity
 		this.collision.material = mat;
 
 		// Read GLTF
-		if(gltf.initCar)
-			gltf.initCar(this,gltf);
-		else
-			this.readVehicleData(gltf);
-
-		
-		
+		if (!this.readVehicleData(gltf))
+			(gltf.initCar ? gltf.initCar : globalThis.initCar)(this, gltf);
 
 		this.modelContainer = new THREE.Group();
 		this.add(this.modelContainer);
 		this.modelContainer.add(gltf.scene);
-		// this.setModel(gltf.scene);
+		
 
 		// Raycast vehicle component
 		this.rayCastVehicle = new CANNON.RaycastVehicle({
@@ -251,7 +246,7 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity
 
 	public handleMouseWheel(event: WheelEvent, value: number): void
 	{
-		this.world.scrollTheTimeScale(value);
+		
 	}
 
 	public inputReceiverInit(): void
@@ -378,7 +373,7 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity
 	public InitVehicle(gltf: any){
 		
 	}
-	public readVehicleData(gltf: any): void
+	public readVehicleData(gltf: any): boolean
 	{
 		gltf.scene.traverse((child) => {
 
@@ -442,11 +437,13 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity
 		if (this.seats.length === 0)
 		{
 			console.warn('Vehicle ' + typeof(this) + ' has no seats.');
+			return false;
 		}
 		else
 		{
 			this.connectSeats();
 		}
+		return true;
 	}
 
 	private connectSeats(): void

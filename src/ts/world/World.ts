@@ -189,6 +189,7 @@ export class World
 		}
 
 		this.render(this);
+		globalThis.SaveReset?.();
 	}
 
 	// Update

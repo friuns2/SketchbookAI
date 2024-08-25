@@ -97,7 +97,7 @@ export class InputManager implements IUpdatable
 
 	public onPointerlockError(event: MouseEvent): void
 	{
-		console.error('PointerLockControls: Unable to use Pointer Lock API');
+		//console.error('PointerLockControls: Unable to use Pointer Lock API');
 	}
 
 	public onMouseDown(event: MouseEvent): void

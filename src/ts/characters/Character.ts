@@ -348,11 +348,7 @@ export class Character extends THREE.Object3D implements IWorldEntity
 		if (this.controlledObject !== undefined)
 		{
 			this.controlledObject.handleMouseWheel(event, value);
-		}
-		else
-		{
-			this.world.scrollTheTimeScale(value);
-		}
+		}		
 	}
 
 	public triggerAction(actionName: string, value: boolean): void
