@@ -307,10 +307,11 @@ function getSimilarityScore(str1, str2) {
 
 // Override GLTFLoader.prototype.load to handle fallback
 const originalLoad = GLTFLoader.prototype.load;
-GLTFLoader.prototype.load = function(url, onLoad, onProgress, onError) {
+GLTFLoader.prototype.load = function(url, onLoad, onProgress, onError, approximateScaleInMeters = 5) {
     originalLoad.call(this, url, onLoad, onProgress, (error) => {
         console.warn(`Failed to load ${url}, attempting to load fallback.`);
         originalLoad.call(this, 'notfound.glb', onLoad, onProgress, onError);
+        
         // Show picker for GLB file
         const fileName = url.split('/').pop().split('.')[0];
         picker.openModelPicker(fileName, async (downloadUrl) => {
@@ -326,3 +327,29 @@ GLTFLoader.prototype.load = function(url, onLoad, onProgress, onError) {
 
     });
 };
+
+function AutoScale(gltf, approximateScaleInMeters = 5) {
+    const model = gltf.scene;
+    const boundingBox = new THREE.Box3().setFromObject(model);
+    const size = new THREE.Vector3();
+    boundingBox.getSize(size);
+
+    const maxDimension = Math.max(size.x, size.y, size.z);
+
+    let scaleFactor = approximateScaleInMeters / maxDimension;
+
+    // Determine if we need to scale by 1, 100, or 1000
+    if (maxDimension > approximateScaleInMeters * 100) {
+        scaleFactor = 0.001;
+    } else if (maxDimension > approximateScaleInMeters * 10) {
+        scaleFactor = 0.01;
+    } else if (maxDimension > approximateScaleInMeters) {
+        scaleFactor = 0.1;
+    } else
+        scaleFactor = 1;
+
+
+    // Apply the calculated scale to the model
+    model.scale.setScalar(scaleFactor);
+}
+

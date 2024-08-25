@@ -26,14 +26,13 @@ let chat = {
     get isMobile(){
         return window.innerWidth < 768;
     },
-    variants: [variantTemplate],
+    variants: [structuredClone(variantTemplate),structuredClone(variantTemplate)],
     currentVariant: 0,
     get variant(){
         return this.variants[this.currentVariant];
     },
 
     async init() {
-        this.variant = structuredClone(variantTemplate);
         document.addEventListener('pointerlockchange', () => this.isCursorLocked = !!document.pointerLockElement);
         globalThis.world = new World();
         await world.initialize('build/assets/world.glb');        
@@ -101,6 +100,7 @@ let chat = {
             this.currentVariant = 0;
             this.variants.length = 1;
             let updateLock = Promise.resolve();
+            let abort = false;
             await Promise.all([1,2,3,4,5].map(async (i) => {
                 const response = await getChatGPTResponse({
                     messages: [
@@ -123,9 +123,12 @@ let chat = {
           
 
                 updateLock = updateLock.then(async () =>{
-                    let data = parseFilesFromMessage(botMessage.content);
-                    this.variants[i].files = data.files;
-                    await this.switchVariant(i);
+                    
+                    if(abort)
+                        return;                    
+                    let result = await this.switchVariant(i);
+                    if(!result.error)
+                        abort = true;
                 });
                 
             }));
@@ -148,10 +151,13 @@ let chat = {
         console.log('switchVariant', index);
         this.currentVariant = index;
         let content = this.variants[this.currentVariant].content;
+        let data = parseFilesFromMessage(content);
+        if(data.files.length>0)
+            this.variants[this.currentVariant].files = data.files;
         this.floatingCode = content;    
         if(this.variant.files.length > 0){
             var code = this.variant.files[0].content;
-            await EvalWithDebug(code);
+            return await EvalWithDebug(code);            
         }
     }
 

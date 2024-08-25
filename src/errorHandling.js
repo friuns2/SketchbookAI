@@ -7,7 +7,9 @@ async function EvalWithDebug(...content) {
         console.error(e);
         await chat.switchVariant(0, false);
         chat.variants[0].lastError = e;
+        return {error: e};
     }
+    return {};
 }
 
 let lastEvalCode = '';
@@ -34,6 +36,7 @@ async function Eval(...contentArray)
         await new Promise(requestAnimationFrame);
     }
     console.log(chat.variant.lastError ? "Execution failed" : "Execution success");
+    if(chat.variant.lastError) throw chat.variant.lastError;
 }
 
 var originalConsoleError = console.error;

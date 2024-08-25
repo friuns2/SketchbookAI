@@ -1,0 +1,105 @@
+/*
+- seat_1
+  - userData
+    - name: seat_1
+    - data: seat
+    - door_object: door_1
+    - seat_type: driver
+    - entry_points: entrance_1
+    - connected_seats: seat_2
+- seat_3
+  - userData
+    - name: seat_3
+    - data: seat
+    - door_object: door_3
+    - seat_type: passenger
+    - entry_points: entrance_3
+    - connected_seats: seat_4
+- seat_2
+  - userData
+    - name: seat_2
+    - data: seat
+    - door_object: door_2
+    - seat_type: passenger
+    - entry_points: entrance_2
+    - connected_seats: seat_1
+- seat_4
+  - userData
+    - name: seat_4
+    - data: seat
+    - seat_type: passenger
+    - door_object: door_4
+    - connected_seats: seat_3
+    - entry_points: entrance_4
+- entrance_1
+  - userData
+    - name: entrance_1
+- entrance_3
+  - userData
+    - name: entrance_3
+- entrance_4
+  - userData
+    - name: entrance_4
+- entrance_2
+  - userData
+    - name: entrance_2
+- Empty
+  - userData
+    - name: Empty
+    - data: camera
+- Cube006
+  - userData
+    - name: Cube.006
+    - data: collision
+    - shape: box
+- Cube002
+  - userData
+    - name: Cube.002
+    - data: collision
+    - shape: box
+- Sphere
+  - userData
+    - name: Sphere
+    - shape: sphere
+    - data: collision
+- body
+  - userData
+    - name: body
+  - children
+    - Steer_parent
+      - userData
+        - name: Steer parent
+      - children
+        - Steering_wheel
+          - userData
+            - name: Steering wheel
+            - data: steering_wheel
+    - door_1
+    - door_2
+    - door_3
+    - door_4
+- wheel_fl
+  - userData
+    - name: wheel_fl
+    - steering: true
+    - data: wheel
+    - drive: fwd
+- Cylinder001
+  - userData
+    - name: Cylinder.001
+    - data: wheel
+    - drive: rwd
+- wheel_fr
+  - userData
+    - name: wheel_fr
+    - data: wheel
+    - steering: true
+    - drive: fwd
+- wheel
+  - userData
+    - name: wheel
+    - data: wheel
+    - drive: rwd
+
+*/
+

@@ -112,6 +112,7 @@ let ${modelName}Model = await new Promise((resolve, reject) => {
             gltf.animations.forEach(a => {
 ${animationsCode}
             });
+            AutoScale(gltf, 5);
             resolve(gltf);
         });
 });

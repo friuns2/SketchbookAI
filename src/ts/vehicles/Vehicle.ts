@@ -37,6 +37,7 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity
 	constructor(gltf: any, handlingSetup?: any)
 	{
 		super();
+		
 
 		if (handlingSetup === undefined) handlingSetup = {};
 		handlingSetup.chassisConnectionPointLocal = new CANNON.Vec3(),
@@ -52,7 +53,10 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity
 		this.collision.material = mat;
 
 		// Read GLTF
-		this.readVehicleData(gltf);
+		if(gltf.initCar)
+			gltf.initCar.call(this);
+		else
+			this.readVehicleData(gltf);
 
 		this.modelContainer = new THREE.Group();
 		this.add(this.modelContainer);
@@ -67,12 +71,12 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity
 			indexForwardAxis: 2
 		});
 
-		this.wheels.forEach((wheel) =>
-		{
+		this.wheels.forEach((wheel) => {
 			handlingSetup.chassisConnectionPointLocal.set(wheel.position.x, wheel.position.y + 0.2, wheel.position.z);
 			const index = this.rayCastVehicle.addWheel(handlingSetup);
 			wheel.rayCastWheelInfoIndex = index;
 		});
+	
 
 		this.help = new THREE.AxesHelper(2);
 	}
@@ -365,7 +369,9 @@ export abstract class Vehicle extends THREE.Object3D implements IWorldEntity
 			});
 		}
 	}
-
+	public InitVehicle(gltf: any){
+		
+	}
 	public readVehicleData(gltf: any): void
 	{
 		gltf.scene.traverse((child) => {
