@@ -13,7 +13,8 @@
         e.preventDefault();
         document.body.style.background = '';
         const file = e.dataTransfer.files[0];
-        if (file && file.name.endsWith('.glb')) {
+        let image = file && file.type.startsWith('image/')
+        if (file && file.name.endsWith('.glb')|| image) {
             const reader = new FileReader();
             reader.onload = async (event) => {
                 const arrayBuffer = event.target.result;
@@ -28,10 +29,43 @@
                 raycaster.setFromCamera(mouse, world.camera);
                 const intersects = raycaster.intersectObjects(world.graphicsWorld.children, true);
                 const intersectionPoint = intersects[0].point;
-                var code = await GetSpawnGLBCode(fileName,intersectionPoint );
-                chat.variant.files[0].content += code;
-                Eval(code);
 
+                if (image) {
+                    const hashCode = fileName.split('').reduce((a, b) => (((a << 5) - a) + b.charCodeAt(0)) | 0, 0).toString(16).substring(0, 2);
+                    const glbFileName = `${hashCode}_${fileName.replace(/\.[^/.]+$/, hashCode+".glb")}`;
+                    let glbUrl;
+                    try {
+                        const response = await fetch(glbFileName);
+                        if (response.ok)
+                            glbUrl = response.url;
+                    }
+                    catch { }
+                    if(!glbUrl)
+                        glbUrl = await GenerateGLB(file);
+
+                    if (glbUrl) {
+                        const glbResponse = await fetch(glbUrl);
+                        const glbBlob = await glbResponse.blob();
+                        const glbArrayBuffer = await glbBlob.arrayBuffer();
+                        
+                        
+                        navigator.serviceWorker.controller.postMessage({
+                            action: 'uploadFiles',
+                            files: [{ name: glbFileName, buffer: glbArrayBuffer }]
+                        });
+                        await new Promise(resolve => setTimeout(resolve, 100));
+
+                        var code = await GetSpawnGLBCode(glbFileName, intersectionPoint, true);
+                        chat.variant.files[0].content += code;
+                        Eval(code);
+                    } else {
+                        console.error('Failed to generate GLB URL');
+                    }
+                } else {
+                    var code = await GetSpawnGLBCode(fileName, intersectionPoint);
+                    chat.variant.files[0].content += code;
+                    Eval(code);
+                }
             };
             reader.readAsArrayBuffer(file);
         } else if (file && file.name.endsWith('.js')) {
@@ -41,10 +75,6 @@
                 await Eval(event.target.result);
             };
             reader.readAsText(file);
-        } else if (file && file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (event) => applyImageTexture(event.target.result);
-            reader.readAsDataURL(file);
         } else {
             alert('Please drop a valid GLB, JS, or image file.');
         }
@@ -59,37 +89,12 @@
 
 
 
-    var applyImageTexture = (imageUrl) => {
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(mouse, world.camera);
-        const intersects = raycaster.intersectObjects(world.graphicsWorld.children, true);
-
-        if (intersects.length > 0) {
-            const intersectedObject = intersects[0].object;
-
-            // Load the image as a texture
-            const textureLoader = new THREE.TextureLoader();
-            textureLoader.load(imageUrl, (texture) => {
-                // Make the texture repeating
-                texture.wrapS = THREE.RepeatWrapping;
-                texture.wrapT = THREE.RepeatWrapping;
-                texture.repeat.set(2, 2); // Adjust these values to control the repetition
-
-                // Create a new material with the loaded texture
-                const material = new THREE.MeshStandardMaterial({ map: texture });
-
-                // Apply the new material to the intersected object
-                intersectedObject.material = material;
-            });
-        } else {
-            console.log("No object intersected for texture application");
-        }
-    };
+   
 
     
 })();
 
-async function GetSpawnGLBCode(fileName, intersectionPoint) {
+async function GetSpawnGLBCode(fileName, intersectionPoint, setPivot = false) {
     const gltf = await new Promise((resolve, reject) => {
         new GLTFLoader().load(fileName, (gltf) => resolve(gltf), undefined, (error) => reject(error));
     });
@@ -97,7 +102,7 @@ async function GetSpawnGLBCode(fileName, intersectionPoint) {
     let isSkinnedMesh = false;
     gltf.scene.traverse(a => isSkinnedMesh ||= a instanceof THREE.SkinnedMesh);
     
-    const modelName = fileName.split('.').slice(0, -1).join('_').replace(/[^a-zA-Z0-9_]/g, '');
+    const modelName = "a"+fileName.split('.').slice(0, -1).join('_').replace(/[^a-zA-Z0-9_]/g, '');
     let animationsCode = animations && animations.length > 0 ? `
             gltf.animations.forEach(a => {
                 /* CRITICAL: Uncomment and assign correct CAnims to each animation immediately!
@@ -133,6 +138,7 @@ world.add(${modelName});
     else code += `
 //CRITICAL: Uncomment and assign correct scale immediately!
 //AutoScale({gltfScene:${modelName}Model.scene, approximateScaleInMeters: 5});
+${setPivot ? `setPivot(${modelName}Model);` : ''}
 ${modelName}Model.scene.position.copy(${VectorToString(intersectionPoint)});
 world.graphicsWorld.add(${modelName}Model.scene);
 /*

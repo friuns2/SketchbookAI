@@ -32,29 +32,14 @@
             });
     });
     let scene = kitchen_knifeModel.scene
-    AutoScale({gltfScene:scene, approximateScaleInMeters: .2});
     scene.position.copy({"x":0,"y":14.86,"z":-1.93});
     world.graphicsWorld.add(scene);
-    let scene2 = {...kitchen_knifeModel, scene:kitchen_knifeModel.scene.clone()};
+    AutoScale({gltfScene:scene, approximateScaleInMeters: .2});
+    player.rhand = kitchen_knifeModel.scene.getObjectByName("Object_2");
+    player.rhand.position.set(0.1, -0.1, 0.1);
+    player.rhand.rotation.set(0, Math.PI / 2, 0);
+    const playerRightHand = player.getObjectByName("rhand");
+    playerRightHand.setParent(player.rhand);
 
-    scene2.scene.position.copy({"x":0,"y":15.86,"z":-1.93});
-    world.graphicsWorld.add(scene2.scene);
-
-
-    
-    var Soldier4Model = globalThis.Soldier4Model = await new Promise((resolve, reject) => { 
-        new GLTFLoader().load("Soldier (4).glb", 
-            gltf => {
-    
-            
-                
-                resolve(gltf);
-            });
-    });
-    
-    
-    var Soldier4 = globalThis.Soldier4 = Soldier4Model.scene.clone();
-    Soldier4.position.set(5.71, 14.80, -11.42);
-    world.add(Soldier4);
-    
+    world.render(world);
 })();

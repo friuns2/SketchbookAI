@@ -1,22 +1,10 @@
-const input = document.createElement('input');
-    input.type = 'text';
-    document.body.appendChild(input);
-    
-    const downloadButton = document.createElement('button');
-    downloadButton.textContent = 'Generate 3D Model';
-    document.body.appendChild(downloadButton);
-    
-    downloadButton.addEventListener('click', async () => {
-        const v = input.value || 'trump';
-        input.value = '';
-        const glbUrl = await GenerateGLB(v);
-        if (glbUrl) loadModel({ glbUrl, pos: new THREE.Vector3(), mass: 0 });
-        else console.error('Failed to generate GLB URL');
-    });
 
-
-async function GenerateGLB(input) {
-    
+async function GenerateGLBFromPrompt(prompt) {
+    const imageBlob = await GenerateImage(prompt);
+    return GenerateGLB(imageBlob);
+}
+async function GenerateImage(input) {
+    let HfInference = (await import('https://esm.sh/@huggingface/inference')).HfInference;
     const prompt = input + ',Full-shot ,Full-length ,entire 3d model, object only, realism, Uncropped, stand alone, white background';
     const hf = new HfInference('YOUR_HUGGINGFACE_TOKEN_HERE');
 
@@ -24,10 +12,15 @@ async function GenerateGLB(input) {
         model: 'black-forest-labs/FLUX.1-schnell',
         inputs: prompt
     });
+    return generatedImageBlob;
+
+}
+
+async function GenerateGLB(imageBlob) {
     let hash = Math.random().toString(36).substring(2, 11) + Math.random().toString(36).substring(2, 11);
 
     const formData = new FormData();
-    formData.append('files', generatedImageBlob, 'generated_image.png');
+    formData.append('files', imageBlob, imageBlob.name);
 
     let filePaths = await fetch("https://stabilityai-stable-fast-3d.hf.space/upload?upload_id=" + hash, {
         method: "POST",

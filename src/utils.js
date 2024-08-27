@@ -263,6 +263,37 @@ function getSimilarityScore(str1, str2) {
     return (1 - distance / maxLen);
 }
 
+(function () {
+
+    const gltfCache = new Map();
+
+    // Now, let's override the GLTFLoader.prototype.load function
+    const originalLoad2 = GLTFLoader.prototype.load;
+    GLTFLoader.prototype.load = function (url, onLoad, onProgress, onError) {
+        // Check if the model is already in the cache
+        if (gltfCache.has(url)) {
+            const cachedModel = gltfCache.get(url);
+            // Clone the cached model to avoid modifying the original
+            
+            const clonedModel = {...cachedModel, scene: SkeletonUtils.SkeletonUtils.clone(cachedModel.scene)};
+            // Call the onLoad callback with the cloned model
+            if (onLoad) onLoad(clonedModel);
+            return;
+        }
+
+        // If not in cache, use the original load method
+        originalLoad2.call(this, url,
+            (gltf) => {
+                // Store the loaded model in the cache
+                gltfCache.set(url, gltf);
+                // Call the original onLoad callback
+                if (onLoad) onLoad({...gltf, scene: SkeletonUtils.SkeletonUtils.clone(gltf.scene)});
+            },
+            onProgress,
+            onError
+        );
+    };
+})();
 
 THREE.Cache.enabled=true;
 
@@ -318,7 +349,7 @@ function AutoScale({ gltfScene, approximateScaleInMeters = 5}) {
 }
 
 function setPivot(gltf) {
-    const model = gltf.Scene;
+    const model = gltf.scene;
     const boundingBox = new THREE.Box3().setFromObject(model);
     const center = boundingBox.getCenter(new THREE.Vector3());
     model.position.x -= center.x * gltf.scene.scale.x;
