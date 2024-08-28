@@ -97,6 +97,7 @@ let chat = {
                 'build/types/characters/Character.d.ts',
                 'build/types/interfaces/ICharacterAI.d.ts',
                 'build/types/interfaces/ICollider.d.ts',
+                'build/types/core/CameraOperator.d.ts',
                 'build/types/vehicles/Car.d.ts',
                 'src/ts/enums/CharacterAnimations.ts',
                 'src/ts/characters/character_ai/FollowTarget.ts',

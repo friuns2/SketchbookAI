@@ -8,12 +8,13 @@ async function Eval(content)
     //var removedPlayer = content.includes("let playerModel = globalThis.playerModel = await loader.loadAsync('build/assets/boxman.glb')");
 
 
-    var code = "(async () => {\n" + content
+    var code = //"(async () => {\n" +
+     content
         .replace(/^.*(?:new World\(|world\.initialize).*$\n?/gm, '')
         .replace(/world\.render\(world\);/g, '')
         .replace(/\b(let|const)\s+(\w+)\s*=/g, 'var $2 = globalThis.$2 =')        
         + (settings.enableBreakpoints ? ";debugger;" : "")
-        + "\n})();"
+        //+ "\n})();"
         
     //if(removedPlayer)
     //    code = code.replace(/^.*(?:let playerModel = globalThis\.playerModel = await loader\.loadAsync\('build\/assets\/boxman\.glb'\);|var player = globalThis\.player = new Character\(playerModel\);|world\.add\(player\);).*$\n?/gm, '')
@@ -27,7 +28,11 @@ async function Eval(content)
     lastEvalCode = code;
     try
     {
-        (0, eval)(code);    
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.textContent = code;
+        document.body.appendChild(script);
+        //(0, eval)(code);    
     }
     catch(e)
     {

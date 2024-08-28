@@ -138,7 +138,7 @@ world.add(${modelName});
     else code += `
 //CRITICAL: Uncomment and assign correct scale immediately!
 //AutoScale({gltfScene:${modelName}Model.scene, approximateScaleInMeters: 5});
-${setPivot ? `setPivot(${modelName}Model);` : ''}
+${setPivot ? `SetPivotCenter(${modelName}Model);` : ''}
 ${modelName}Model.scene.position.copy(${VectorToString(intersectionPoint)});
 world.graphicsWorld.add(${modelName}Model.scene);
 /*
