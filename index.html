@@ -101,7 +101,7 @@
                 </div>
             </div>
             <div id="suggestion-bubbles" class="mt-2">
-                <span v-for="suggestion in suggestions" :key="suggestion" class="suggestion-bubble" @click="SetSuggestion(suggestion)">{{ suggestion }}</span>
+                <span v-for="suggestion in suggestions" :key="suggestion" class="suggestion-bubble" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" @click="SetSuggestion(suggestion)">{{ suggestion }}</span>
             </div>       
         </div>
         <button id="show-3d-picker" class="fixed top-16 left-4 transform bg-transparent border-none z-50" onclick="picker.openModelPicker()">

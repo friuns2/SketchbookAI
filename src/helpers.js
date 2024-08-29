@@ -154,7 +154,7 @@ function SetPivotCenter(gltf) {
 class BaseObject extends THREE.Object3D {
     constructor(model) {
         super();
-        expose(model);
+        expose(model,model.name);
         const bbox = new THREE.Box3().setFromObject(model);
         const size = bbox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
         const center = new THREE.Vector3();
@@ -198,11 +198,11 @@ THREE.Object3D.prototype.addWithPreservedScale = function (child) {
     child.scale.copy(childWorldScale.divide(parentWorldScale));
 
 };
-function expose(obj) {
+function expose(obj,name = obj.name) {
     try {
         obj.updateWorldMatrix(true, true);
-        const folder = world.gui.addFolder(obj.name);
-        const storageKey = `${obj.name}_transform`;
+        const folder = world.gui.addFolder(name);
+        const storageKey = `${name}_transform`;
         const savedValues = JSON.parse(localStorage.getItem(storageKey) || '{}');
 
         ['position', 'rotation', 'scale'].forEach(prop => {
@@ -222,7 +222,7 @@ function expose(obj) {
             });
         });
 
-        folder.open();
+        
     }
     catch (e) {
         console.log(e);

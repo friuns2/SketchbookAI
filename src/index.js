@@ -10,7 +10,7 @@ let chat = {
     inputText: '',
     window: window,
     document: document,
-    suggestions: ['Add a red cube', 'Create a bouncing ball', 'Generate a 3D tree'],
+    suggestions: ['Add a red cube', 'Create a bouncing ball', 'make pistol shoot, bullets, kill zombie when hit'],
     lastError: null,
     isLoading: false,
     params: {
@@ -133,7 +133,7 @@ let chat = {
                     messages: [
                         { role: "system", content: settings.rules },
                         { role: "system", content: filesMessage },
-                        { role: "user", content: `${previousUserMessages}\n\nCurrent code:\n\`\`\`javascript\n${code}\n\`\`\`\n\nUpdate code below, spawn position: ${playerLookPoint}, Rewrite JavaScript code that will; ${this.params.lastText}` }
+                        { role: "user", content: `${previousUserMessages}\n\nCurrent code:\n\`\`\`javascript\n${code}\n\`\`\`\n\nUpdate code below, i'm looking at: ${playerLookPoint}, Rewrite JavaScript code that will; ${this.params.lastText}` }
                     ],
                     signal: this.abortController.signal
                 });

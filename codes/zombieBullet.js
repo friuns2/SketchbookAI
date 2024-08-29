@@ -38,13 +38,13 @@ pistolModel.scene.position.copy({ "x": 0, "y": 14.86, "z": -1.93 });
 world.graphicsWorld.add(pistolModel.scene);
 
 var object = globalThis.object = pistolModel.scene.getObjectByName("Object_2");
-object.position.set(0.1, -0.1, 0.1);
-object.rotation.set(0, Math.PI / 2, 0);
+pistol.position.set(0.1, -0.1, 0.1);
+pistol.rotation.set(0, Math.PI / 2, 0);
 
 var playerRightHand = globalThis.playerRightHand = player.getObjectByName("rhand");
-playerRightHand.addWithPreservedScale(object);
+playerRightHand.addWithPreservedScale(pistol);
 
-expose(object);
+expose(pistol);
 world.startRenderAndUpdatePhysics?.();
 
 extendMethod(world, "update", function (timeStep) {
@@ -84,7 +84,7 @@ async function shootPistol() {
     var bulletModel = globalThis.bulletModel = await loader.loadAsync('build/assets/bullet.glb');
     AutoScale({ gltfScene: bulletModel.scene, approximateScaleInMeters: 0.1 });
     var bullet = globalThis.bullet = new BaseObject(bulletModel.scene);    
-    bullet.setPosition(object.getWorldPosition().clone());
+    bullet.setPosition(pistol.getWorldPosition().clone());
     var force = globalThis.force = 100;
     var direction = globalThis.direction = player.getWorldDirection().clone().multiplyScalar(force);
     bullet.body.applyImpulse(Utils.cannonVector(direction), Utils.cannonVector(bullet.position));
