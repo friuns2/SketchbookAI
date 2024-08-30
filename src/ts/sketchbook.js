@@ -88,3 +88,8 @@ globalThis.CAnims = CAnims;
 globalThis.CarPrototype = Car.prototype
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 globalThis.SkeletonUtils = SkeletonUtils;
+
+import Swal from 'sweetalert2';
+globalThis.Swal = Swal.mixin({
+    toast: true,
+});;

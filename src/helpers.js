@@ -1,4 +1,4 @@
-function extendMethod(object, methodName, extension) {
+function addMethodListener(object, methodName, extension) {
     const originalMethod = object[methodName].bind(object);
     snapshot.reset.push(() => {
         object[methodName] = originalMethod;
@@ -200,10 +200,10 @@ THREE.Object3D.prototype.addWithPreservedScale = function (child) {
 };
 function expose(obj,name = obj.name) {
     try {
-        obj.updateWorldMatrix(true, true);
         const folder = world.gui.addFolder(name);
         const storageKey = `${name}_transform`;
         const savedValues = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        obj.updateWorldMatrix(true, true);
 
         ['position', 'rotation', 'scale'].forEach(prop => {
             ['x', 'y', 'z'].forEach(axis => {

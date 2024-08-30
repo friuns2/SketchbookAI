@@ -2,7 +2,8 @@
 let variantTemplate = {
     content: '',
     lastError: null,
-    files: []
+    files: [],
+    processing: false
 }
 let chat = {
 
@@ -131,21 +132,22 @@ let chat = {
             await Promise.all([1,2,3,4,5].map(async (i) => {
                 const response = await getChatGPTResponse({
                     messages: [
-                        { role: "system", content: settings.rules },
+                        { role: "system", content: settings.rules + `\nto spawn object use: ${playerLookPoint}` },
                         { role: "system", content: filesMessage },
-                        { role: "user", content: `${previousUserMessages}\n\nCurrent code:\n\`\`\`javascript\n${code}\n\`\`\`\n\nUpdate code below, i'm looking at: ${playerLookPoint}, Rewrite JavaScript code that will; ${this.params.lastText}` }
+                        { role: "user", content: `${previousUserMessages}\n\nCurrent code:\n\`\`\`javascript\n${code}\n\`\`\`\n\nUpdate code below, Rewrite JavaScript code that will; ${this.params.lastText}` }
                     ],
                     signal: this.abortController.signal
                 });
                 this.currentVariant = i;
-                let botMessage = structuredClone(variantTemplate);                
+                let botMessage = structuredClone(variantTemplate);   
+                botMessage.processing=true;             
                 this.variants[i] = botMessage;
                 for await (const chunk of response) {
                     botMessage.content = chunk.message.content;                   
                     if(this.currentVariant == i)
                         this.floatingCode = botMessage.content;
                 }
-                
+                botMessage.processing=false;
                 console.log(botMessage.content);
           
 
@@ -190,6 +192,8 @@ let chat = {
         if(data.files.length>0)
             variant.files = data.files;
         this.floatingCode = content;    
+        if (index == 0 && !chat.inputText)
+            chat.inputText = chat.params.lastText;
         if(variant.files.length > 0){
             var code = variant.files[0].content;
             ResetState();

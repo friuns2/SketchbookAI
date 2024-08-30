@@ -11,6 +11,10 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
 </head>
 <style>
+    .swal2-popup {
+        background: rgba(255, 255, 255, 0.2) !important;
+        backdrop-filter: blur(6px) !important;
+    }
     .progress-circle {
         border: 4px solid rgba(255, 255, 255, 0.3);
         border-top: 4px solid #ffffff;
@@ -70,15 +74,18 @@
                         v-for="(variant, index) in variants" 
                         :key="index"
                         :title="variant.lastError"
-                        @click="switchVariant(index)"
+                        @click="!variant.processing ? switchVariant(index) : null"
                         class="mx-1 px-3 py-1 rounded-full text-sm font-semibold"
                         :class="{
-                            'bg-blue-500 text-white': currentVariant === index && !variant.lastError,
+                            'bg-blue-500 text-white': currentVariant === index && !variant.lastError && !variant.processing,
                             'bg-red-500 text-white': variant.lastError,
-                            'bg-gray-300 text-gray-700': currentVariant !== index && !variant.lastError
+                            'bg-gray-300 text-gray-700': currentVariant !== index && !variant.lastError || variant.processing,
+                            'opacity-50 cursor-not-allowed': variant.processing
                         }"
+                        :disabled="variant.processing"
                     >
-                        {{ index + 1 }}
+                        <i v-if="index === 0" class='fas fa-undo'></i>
+                        <span v-else>{{ index }}</span>
                     </button>
                 </div>
                 <div class="flex items-center">

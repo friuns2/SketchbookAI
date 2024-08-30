@@ -25,7 +25,7 @@ document.addEventListener('mousedown', (event) => {
     }
 });
 
-extendMethod(player, "inputReceiverInit", function () {
+addMethodListener(player, "inputReceiverInit", function () {
     world.cameraOperator.setRadius(1.6)
 });
 player.takeControl();
@@ -47,7 +47,7 @@ playerRightHand.addWithPreservedScale(pistol);
 expose(pistol);
 world.startRenderAndUpdatePhysics?.();
 
-extendMethod(world, "update", function (timeStep) {
+addMethodListener(world, "update", function (timeStep) {
     //world update here
 });
 

@@ -1,3 +1,5 @@
+
+
 function InitVue(obj, args = {}) {
     var updatedFromHash;
     let defaultParams = _.cloneDeep(obj.params);
@@ -112,30 +114,50 @@ function SaveState() {
         folders: {...world.gui.__folders}
 //        player:player
     };
-}
-function ResetState() {    
-    world.graphicsWorld.children.length = 0;
-    world.graphicsWorld.children.push(...snapshot.graphicsWorld);
-    [...world.physicsWorld.bodies].forEach(body => world.physicsWorld.remove(body));
-    snapshot.physicsWorld.forEach(body => world.physicsWorld.addBody(body));
-    world.updatables.length = 0;
-    world.updatables.push(...snapshot.updatables);
-    world.characters.length = 0;
-    world.characters.push(...snapshot.characters);
-    world.vehicles.length = 0;
-    world.vehicles.push(...snapshot.vehicles);
-    world.timeScaleTarget=1;
-    // Remove non-existent folders and update existing ones
-    Object.keys(world.gui.__folders).forEach(key => {
-        if (!snapshot.folders[key]) {
-            world.gui.removeFolder(world.gui.__folders[key]);
-        }
-    });
-    snapshot.reset.forEach(reset => reset());
-    snapshot.reset = [];
+    const appendedElements = new Set();
+    const originalAppendChild = document.body.appendChild;
+    document.body.appendChild = function (...args) {
+        const element = originalAppendChild.apply(this, args);
+        appendedElements.add(element);
+        return element;
+    };
+    const originalSetInterval = window.setInterval;
+    const setIntervals = new Set();
+    
+    window.setInterval = function(...args) {
+        const id = originalSetInterval.apply(this, args);
+        setIntervals.add(id);
+        return id;
+    };    
 
-  //  globalThis.player = snapshot.player;    
+    globalThis.ResetState =function() {    
+        appendedElements.forEach(element => element.parentNode?.removeChild(element));
+        appendedElements.clear();
+        world.graphicsWorld.children.length = 0;
+        world.graphicsWorld.children.push(...snapshot.graphicsWorld);
+        [...world.physicsWorld.bodies].forEach(body => world.physicsWorld.remove(body));
+        snapshot.physicsWorld.forEach(body => world.physicsWorld.addBody(body));
+        world.updatables.length = 0;
+        world.updatables.push(...snapshot.updatables);
+        world.characters.length = 0;
+        world.characters.push(...snapshot.characters);
+        world.vehicles.length = 0;
+        world.vehicles.push(...snapshot.vehicles);
+        world.timeScaleTarget=1;
+        Object.keys(world.gui.__folders).forEach(key => {
+            if (!snapshot.folders[key]) {
+                world.gui.removeFolder(world.gui.__folders[key]);
+            }
+        });
+        snapshot.reset.forEach(reset => reset());
+        snapshot.reset = [];
+    
+        setIntervals.forEach(id => clearInterval(id));
+        setIntervals.clear();
+    }
+        
 }
+
 
 
 if (!navigator.serviceWorker && !window.location.hostname.startsWith('192')) {

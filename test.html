@@ -1,47 +1,41 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js",
-    "three/editor": "https://cdn.jsdelivr.net/npm/three@0.167.0/examples/jsm/editor/Editor.js",
-    "three/controls/OrbitControls": "https://cdn.jsdelivr.net/npm/three@0.167.0/examples/jsm/controls/OrbitControls.js"
-  }
-}
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweetAlert in Background</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2"></script>
+    <style>
+ 
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-<script type="module">
-    import * as THREE from 'three';
-    import { Editor } from 'three/editor';
+    <button id="showAlertBtn">Show Background Alert</button>
 
-    // Create a scene
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement); 
+    <script>
+        Swal=Swal.mixin({
+         
+            toast: true,
+          
+        });
 
-    // Create a cube
-    const geometry = new THREE.BoxGeometry();
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+        document.getElementById('showAlertBtn').addEventListener('click', function() {
+            Swal.fire({
+                title: 'Background Alert',
+                text: 'This alert is in the background',
+                icon: 'info',
+            });
 
-    camera.position.z = 5;
-
-    // Initialize the editor
-    const editor = new Editor();
-    editor.setScene(scene);
-
-    // Animation loop
-    function animate() {
-        requestAnimationFrame(animate);
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-        renderer.render(scene, camera);
-    }
-    animate();
-</script>
+            // Immediately blur the alert to prevent focus
+            setTimeout(() => {
+                document.activeElement.blur();
+            }, 0);
+        });
+    </script>
 </body>
 </html>

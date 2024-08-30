@@ -25,7 +25,7 @@ async function Eval(content)
     if (chat.currentVariant!=0)
         console.log(code);
     if(content.includes("world.update = "))
-        throw new Error("direct assign world.update = function(){} is not allowed, use extendMethod");
+        throw new Error("direct assign world.update = function(){} is not allowed, use addMethodListener");
     lastEvalCode = code;
     try
     {
@@ -45,7 +45,10 @@ var originalConsoleError = console.error;
 console.error = (...args) => {
     if (args[0].message === "The user has exited the lock before this request was completed.")
         return;
+    if(settings.enableBreakpoints)
+        debugger;
     let error = chat.variant.lastError = {
+        args:args,
         url: args.map(arg => arg.target?.responseURL).find(a => a),
         message: args.map(arg => {
             return arg.target?.responseURL && `Not Found: ${arg.target.responseURL}. ` 
