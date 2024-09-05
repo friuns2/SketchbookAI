@@ -29,8 +29,9 @@ class Player extends Character {
         this.rhand = model.scene.getObjectByName("rhand");
         this.lhand = model.scene.getObjectByName("lhand");
         this.remapAnimations(model.animations);
-        this.actions.interract = new KeyBinding("KeyR");
-        this.actions.aim = new KeyBinding("MouseRight");
+        this.actions.interract = KeyBinding.CreateKeyBinding("R");
+        this.actions.aim = KeyBinding.CreateMouseBinding(2);
+        this.actions.dropWeapon = KeyBinding.CreateKeyBinding("V");
         this.originalSensitivity = world.cameraOperator.sensitivity.clone();
         this.aimingSpeed = 0.5;
         this.aimingFOV = 40;
@@ -54,6 +55,7 @@ class Player extends Character {
         if (this.rhand) {
             this.rhand.attach(weapon);
             weapon.position.set(0, 0, 0);
+            weapon.rotation.set(0, 0, 0);
             this.heldWeapon = weapon;
             world.remove(weapon);
         }
@@ -82,13 +84,14 @@ class Player extends Character {
             }
         }
         if (this.actions.aim.isPressed) {
-            world.camera.fov = this.aimingFOV;
+            world.camera.fov += (this.aimingFOV - world.camera.fov) * 0.1; // Lerp smoothly towards the aiming FOV
             world.cameraOperator.sensitivity.x = this.aimingSpeed;
             world.cameraOperator.sensitivity.y = this.aimingSpeed;
             // Apply offset relative to camera rotation
             const cameraDirection = world.camera.getWorldDirection(new THREE.Vector3());
             const rotatedOffset = this.aimingOffset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(cameraDirection.x, cameraDirection.z));
             world.cameraOperator.target.add(rotatedOffset);
+            world.camera.updateProjectionMatrix()
             crosshair.style.display = 'block';
             // Rotate the player towards the aim direction
             const aimDirection = world.camera.getWorldDirection(new THREE.Vector3());
@@ -97,11 +100,15 @@ class Player extends Character {
             this.setOrientation(aimDirection, false);
         } else {
             world.camera.fov = this.originalFOV;
+            world.camera.updateProjectionMatrix()
             world.cameraOperator.sensitivity.x = this.originalSensitivity.x;
             world.cameraOperator.sensitivity.y = this.originalSensitivity.y;
             crosshair.style.display = 'none';
         }
 
+        if (this.actions.dropWeapon.justPressed) {
+            this.detachWeapon();
+        }
     }
 
     handleMouseButton(event, code, pressed) {
@@ -221,4 +228,3 @@ world.add(rocketLauncher);
 rocketLauncher.setPosition(1, 0, -2);
 expose(rocketLauncherModel.scene, "rocketlauncher");
 
-// ... rest of the code

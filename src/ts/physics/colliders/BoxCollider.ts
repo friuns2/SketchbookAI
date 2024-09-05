@@ -19,7 +19,6 @@ export class BoxCollider implements ICollider
 		};
 		options = Utils.setDefaults(options, defaults);
 		this.options = options;
-
 		options.position = new CANNON.Vec3(options.position.x, options.position.y, options.position.z);
 		options.size = new CANNON.Vec3(options.size.x, options.size.y, options.size.z);
 

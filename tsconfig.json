@@ -1,10 +1,10 @@
 {
     "include": [
         "src/**/*"
-, "src/ts/vehicles/test.js", "build/types/vehicles/index.js", "src/index.js"    ],
+, "src/ts/vehicles/test.js", "build/types/vehicles/index.js", "src/index.js", "src/codeTempalte.js"    ],
     "compilerOptions": {
         "module": "commonjs",
-        "target": "es5",
+        "target": "es6",
         "sourceMap": true,
         "moduleResolution": "node",
         "declaration": true,
@@ -16,4 +16,4 @@
             "cannon" : ["src/lib/cannon/cannon"]
         }
     }
-}
+} 

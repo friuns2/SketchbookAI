@@ -9,33 +9,14 @@ GLTFLoader.prototype.loadAsync = async function (glbUrl) {
     });
 };
 
-var textPrompt = globalThis.textPrompt = document.createElement('div');
+const textPrompt = document.createElement('div');
 textPrompt.style.cssText = "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);";
 document.body.appendChild(textPrompt);
 
-var loader = globalThis.loader = new GLTFLoader();
+const loader = new GLTFLoader();
 
-var playerModel = globalThis.playerModel = await loader.loadAsync('build/assets/boxman.glb');
+const playerModel = await loader.loadAsync('build/assets/boxman.glb');
 expose(playerModel.scene, "player");
-
-class GrenadeProjectile extends BaseObject {
-    constructor(position, velocity, explosionRadius = 2, damage = 50) {
-        super(new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({ color: 0xff0000 })), true);
-        this.setPosition(position);
-        this.body.velocity.copy(velocity);
-        this.explosionRadius = explosionRadius;
-        this.damage = damage;
-        this.updateOrder = 1;
-    }
-
-    update(timeStep) {
-        super.update(timeStep);
-
-        // Check for collisions
-        const hits = world.physicsWorld.bodies.filter(body => body !== this.body && body.material !== defaultMaterial && this.body.position.distanceTo(body.position) < this.explosionRadius);
-      
-    }
-}
 
 class Player extends Character {
     constructor(model) {
@@ -44,19 +25,9 @@ class Player extends Character {
         this.lhand = model.scene.getObjectByName("lhand");
         this.remapAnimations(model.animations);
         this.actions.interract = new KeyBinding("KeyR");
-        this.originalSensitivity = world.cameraOperator.sensitivity.clone();
-        this.actions.throwGrenade = new KeyBinding("MouseLeft");
-        this.actions.aim = new KeyBinding("MouseRight");
-        this.aimingSpeed = 0.5;
-        this.aimingFOV = 40;
-        this.aimingOffset = new THREE.Vector3(-0.5, 0.3, 0.0);
-        this.originalFOV = world.camera.fov;
-        this.grenadeVelocity = new THREE.Vector3();
-        this.grenadeVelocity.setLength(20);
-    }
-
-    update(timeStep) {
-        super.update(timeStep);
+        this.actions.throwPistol = new KeyBinding("KeyG");
+        this.lastCubePosition = null;
+        this.attachedPistol = null;
     }
 
     remapAnimations(animations) {
@@ -66,42 +37,57 @@ class Player extends Character {
         });
     }
 
+    attachPistolToHand(pistol) {
+        if (this.rhand) {
+            this.rhand.attach(pistol);            
+            pistol.position.set(0,0,0);
+            this.attachedPistol = pistol;
+            world.remove(pistol);
+        }
+    }
+
+    throwPistol() {
+        if (this.attachedPistol) {
+            this.attachedPistol.body.velocity.copy(
+                this.velocity.clone().multiplyScalar(2) // Throw the pistol with twice the player's velocity
+            );
+            this.attachedPistol.removeFromParent();            
+            this.attachedPistol = null;
+        }
+    }
+
     inputReceiverUpdate(deltaTime) {
         super.inputReceiverUpdate(deltaTime);
 
         textPrompt.textContent = "";
-
         // Check for interactable objects within range
         for (let updatable of world.objects) {
             if (updatable.interract && this.position.distanceTo(updatable.position) < 2) {
                 textPrompt.textContent = "Press R to interact";
                 if (this.actions.interract.isPressed) {
                     updatable.interract(this);
+                
                     break;
                 }
             }
         }
 
-        // Shoot grenade
-        if (this.actions.throwGrenade.isPressed) {
-            const grenade = new GrenadeProjectile(this.rhand.getWorldPosition(new THREE.Vector3()), this.grenadeVelocity);
-            grenade.addToWorld(world);
+        if (this.actions.throwPistol.isPressed) {
+            this.throwPistol();
         }
     }
 
     handleMouseButton(event, code, pressed) {
         super.handleMouseButton(event, code, pressed);
         if (event.button === 0 && pressed === true) {
-            // Shoot grenade
-            const grenade = new GrenadeProjectile(this.rhand.getWorldPosition(new THREE.Vector3()), this.grenadeVelocity);
-            grenade.addToWorld(world);
+            // Shoot the pistol
         } else if (event.button === 2 && pressed === true) {
             // Perform another action
         }
     }
 }
 
-var player = globalThis.player = new Player(playerModel);
+const player = new Player(playerModel);
 player.setPosition(0, 0, -5);
 world.add(player);
 
@@ -109,5 +95,24 @@ addMethodListener(player, "inputReceiverInit", function () {
     world.cameraOperator.setRadius(1.6)
 });
 player.takeControl();
+
+class Pistol extends BaseObject {
+    constructor(model) {
+        super(model);        
+    }
+    interract(player) {
+        player.attachPistolToHand(this);
+        world.remove(this);
+    }
+}
+
+var pistol = await new GLTFLoader().loadAsync("-3_9mm-pistol-gun-weapon-series-260nw-515302792-3.glb").then(gltf => {
+    const pistolObject = new Pistol(gltf.scene);
+    world.add(pistolObject);
+    expose(gltf.scene, "pistol");
+    return pistolObject;
+});
+pistol.setPosition(1.81, -0.53, -1.76);
+pistol.scale.set(0.3, 0.3, 0.3);
 
 world.startRenderAndUpdatePhysics?.();

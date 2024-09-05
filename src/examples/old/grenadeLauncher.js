@@ -36,7 +36,6 @@ class Player extends Character {
         this.aimingFOV = 40;
         this.aimingOffset = new THREE.Vector3(-0.5, 0.3, 0.0);
         this.originalFOV = world.camera.fov;
-        this.heldWeapon = null;
     }
 
     update(timeStep) {
@@ -48,22 +47,6 @@ class Player extends Character {
             if (a.name === "Idle") a.name = CAnims.idle;
             if (a.name === "Run") a.name = CAnims.run;
         });
-    }
-
-    attachWeapon(weapon) {
-        if (this.rhand) {
-            this.rhand.attach(weapon);
-            weapon.position.set(0, 0, 0);
-            this.heldWeapon = weapon;
-            world.remove(weapon);
-        }
-    }
-
-    detachWeapon() {
-        if (this.heldWeapon) {
-            this.heldWeapon.removeFromParent();
-            this.heldWeapon = null;
-        }
     }
 
     inputReceiverUpdate(deltaTime) {
@@ -94,7 +77,7 @@ class Player extends Character {
             const aimDirection = world.camera.getWorldDirection(new THREE.Vector3());
             aimDirection.y = 0; // Ignore vertical component
             aimDirection.normalize();
-            this.setOrientation(aimDirection, false);
+            this.setOrientation(aimDirection,false);
         } else {
             world.camera.fov = this.originalFOV;
             world.cameraOperator.sensitivity.x = this.originalSensitivity.x;
@@ -106,8 +89,8 @@ class Player extends Character {
 
     handleMouseButton(event, code, pressed) {
         super.handleMouseButton(event, code, pressed);
-        if (event.button === 0 && pressed === true && this.heldWeapon) {
-            this.heldWeapon.shoot();
+        if (event.button === 0 && pressed === true) {
+            shootGrenade();
         } else if (event.button === 2 && pressed === true) {
             // Perform another action
         }
@@ -126,62 +109,35 @@ player.takeControl();
 
 world.startRenderAndUpdatePhysics?.();
 
-class Weapon extends BaseObject {
-    constructor(model) {
-        super(model, 0.1);
-        this.shootDelay = 1000;
-        this.lastShootTime = 0;
-    }
+async function shootGrenade() {
+    var grenadeModel = await loader.loadAsync('build/assets/grenade.glb');
+    AutoScale(grenadeModel.scene, 0.1);
+    var grenade = new BaseObject(grenadeModel.scene,0.3);
+    grenade.setPosition(player.rhand.getWorldPosition().clone());
+    
+    // Get the camera's world direction
+    var cameraDirection = new THREE.Vector3();
+    world.camera.getWorldDirection(cameraDirection);
+    
+    var force = 10;
+    var up = new THREE.Vector3(0, 1, 0);
+    var direction = cameraDirection.multiplyScalar(force).add(up);
+    grenade.body.velocity = Utils.cannonVector(direction);
+    world.add(grenade);
 
-    interract(player) {
-        player.attachWeapon(this);
-        world.remove(this);
-    }
+    // Ignore collisions with the player
+    grenade.body.collisionFilterMask = ~2; // Assuming the player's collision group is 2
 
-    shoot() {
-        if (Date.now() - this.lastShootTime > this.shootDelay) {
-            this.lastShootTime = Date.now();
-            // Implement shooting logic here, e.g., create a projectile
-            // Example using a grenade:
-            this.shootGrenade();
+    // Check for collisions with other objects
+    grenade.body.addEventListener('collide', (event) => {
+        var otherBody = event.body;
+        if (otherBody !== player.characterCapsule.body) {
+            // Grenade hit something, explode
+            console.log('Grenade hit!');
+            world.remove(grenade); // Remove the grenade from the world
+            explodeGrenade(grenade.position);
         }
-    }
-
-    shootGrenade() {
-        var grenadeModel = globalThis.grenadeModel = loader.loadAsync('build/assets/grenade.glb').then(gltf => {
-            return gltf.scene;
-        });
-        grenadeModel.then(grenadeModel => {
-            AutoScale(grenadeModel, 0.1);
-            var grenade = new BaseObject(grenadeModel, 0.1);
-            grenade.setPosition(this.getWorldPosition().clone());
-
-            // Get the camera's world direction
-            var cameraDirection = new THREE.Vector3();
-            world.camera.getWorldDirection(cameraDirection);
-
-            var force = 30;
-            var up = new THREE.Vector3(0, 1, 0);
-            var direction = cameraDirection.multiplyScalar(force).add(up);
-            grenade.body.velocity = Utils.cannonVector(direction);
-
-            world.add(grenade);
-
-            // Ignore collisions with the player
-            grenade.body.collisionFilterMask = ~2; // Assuming the player's collision group is 2
-
-            // Check for collisions with other objects
-            grenade.body.addEventListener('collide', (event) => {
-                var otherBody = event.body;
-                if (otherBody !== player.characterCapsule.body) {
-                    // Grenade hit something, explode
-                    console.log('Grenade hit!');
-                    world.remove(grenade); // Remove the grenade from the world
-                    explodeGrenade(grenade.position);
-                }
-            });
-        });
-    }
+    });
 }
 
 async function explodeGrenade(position) {
@@ -213,12 +169,3 @@ async function explodeGrenade(position) {
     }
     update();
 }
-
-// Load and create a weapon object
-var rocketLauncherModel = await loader.loadAsync('build/assets/rocketlauncher.glb'); // Replace with the actual weapon model
-var rocketLauncher = new Weapon(rocketLauncherModel.scene);
-world.add(rocketLauncher);
-rocketLauncher.setPosition(1, 0, -2);
-expose(rocketLauncherModel.scene, "rocketlauncher");
-
-// ... rest of the code

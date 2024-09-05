@@ -41,7 +41,6 @@ export class World
 	public graphicsWorld: THREE.Scene;
 	public sky: Sky;
 	public physicsWorld: CANNON.World;
-	public parallelPairs: any[];
 	public physicsFrameRate: number;
 	public physicsFrameTime: number;
 	public physicsMaxPrediction: number;
@@ -50,7 +49,6 @@ export class World
 	public logicDelta: number;
 	public requestDelta: number;
 	public sinceLastFrame: number;
-	public justRendered: boolean;
 	public params: any;
 	public inputManager: InputManager;
 	public cameraOperator: CameraOperator;
@@ -63,6 +61,7 @@ export class World
 	public readonly paths: Path[] = [];
 	public scenarioGUIFolder: any;
 	public updatables: IUpdatable[] = [];
+	public objects: THREE.Object3D[] = [];
 	public loadingManager: LoadingManager; 
 	private lastScenarioID: string;
 
@@ -129,7 +128,6 @@ export class World
 		this.physicsWorld.solver.iterations = 10;
 		this.physicsWorld.allowSleep = true;
 
-		this.parallelPairs = [];
 		this.physicsFrameRate = 60;
 		this.physicsFrameTime = 1 / this.physicsFrameRate;
 		this.physicsMaxPrediction = this.physicsFrameRate;
@@ -139,7 +137,6 @@ export class World
 		this.renderDelta = 0;
 		this.logicDelta = 0;
 		this.sinceLastFrame = 0;
-		this.justRendered = false;
 
 		// Stats (FPS, Frame time, Memory)
 		this.stats = Stats();
@@ -184,10 +181,15 @@ export class World
 				buttonsStyling: false
 			});
 		}
+				
 		const animate = () => {
 			//setTimeout(() => {
 				requestAnimationFrame(animate);
+				try{
 				this.render(this);
+				}catch(e){
+					console.error(e);
+				}
 			//}, 1000 / 60); // 20 FPS
 		};
 		globalThis.SaveState?.();
@@ -203,7 +205,12 @@ export class World
 
 		// Update registred objects
 		this.updatables.forEach((entity) => {
-			entity.update(timeStep, unscaledTimeStep);
+			try {
+				entity.update(timeStep, unscaledTimeStep);
+			} catch (error) {
+				this.updatables.splice(this.updatables.indexOf(entity), 1);
+				throw error;
+			}
 		});
 
 		// Lerp time scale
@@ -318,19 +325,21 @@ export class World
 		{
 			this.graphicsWorld.add(worldEntity);
 		}
-		
+		this.objects.push(worldEntity);
 	}
 
 	public registerUpdatable(registree: IUpdatable): void
 	{
+		if (this.updatables.includes(registree)) return;
 		this.updatables.push(registree);
 		this.updatables.sort((a, b) => (a.updateOrder > b.updateOrder) ? 1 : -1);
 	}
 
-	public remove(worldEntity: IWorldEntity): void
+	public remove(worldEntity: IWorldEntity|any): void
 	{
-		if(!worldEntity)return;
-		worldEntity.removeFromWorld(this);
+		if (!worldEntity) return;
+		worldEntity.removeFromWorld?.(this);
+		this.graphicsWorld.remove(worldEntity);
 		this.unregisterUpdatable(worldEntity);
 	}
 

@@ -35,9 +35,11 @@
         "webpack-merge": "^4.2.2"
     },
     "dependencies": {
+        "@types/three-nebula": "^10.0.4",
         "jquery": "^3.6.0",
         "sweetalert2": "^9.17.2",
-        "three": "0.113.0",
-        "three-csm": "1.0.2"
+        "three": "^0.113.0",
+        "three-csm": "1.0.2",
+        "three-nebula": "^10.0.3"
     }
 }

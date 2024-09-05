@@ -1,5 +1,4 @@
 globalThis.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-
 let variantTemplate = {
     content: '',
     lastError: null,
@@ -63,7 +62,7 @@ let chat = {
 
             //world.timeScaleTarget=0
             //Eval(this.variant.files[0].content);
-        }, 100);
+        }, 500);
         
     },
     async SetSuggestion(suggestion) {
@@ -108,7 +107,7 @@ let chat = {
     },
     async Clear(){
         this.variant.content='';
-        this.variant.files = [{ name: 'script.js', content: await fetch('src/code.js').then(response => response.text()) }];
+        this.variant.files = [{ name: 'script.js', content: await fetch("src/"+codeFile).then(response => response.text()) }];
         
     },
     floatingCode: '',
@@ -120,29 +119,39 @@ let chat = {
         Say(this.params.lastText)
         this.inputText = '';
         this.abortController?.abort();
-        this.abortController = new AbortController();
+        this.abortController = new AbortController();    
         this.isLoading = true;
+        
         try {
             const fileNames = [
                 'build/types/world/World.d.ts',
                 'build/types/characters/Character.d.ts',
                 'build/types/interfaces/ICharacterAI.d.ts',
                 'build/types/interfaces/ICollider.d.ts',
+                'build/types/interfaces/IInputReceiver.d.ts',
                 'build/types/core/CameraOperator.d.ts',
                 'build/types/vehicles/Car.d.ts',
                 'build/types/core/KeyBinding.d.ts',
-                'src/ts/enums/CharacterAnimations.ts',
+                'src/ts/enums/CharacterAnimations.ts',                
                 'src/ts/characters/character_ai/FollowTarget.ts',
                 'src/ts/characters/character_ai/RandomBehaviour.ts',
+                'node_modules/three/src/core/Object3D.d.ts',
                 //'src/ts/core/InputManager.ts',
                 'src/helpers.js',                
+                ...(await fetchFilesFromDir('src/examples'))
+
             ];
             
             const fetchPromises = fileNames.map(path => 
                 fetch(path).then(response => response.text()).catch(e => {
                     alert("Error fetching file: " + e + " " + path);
                     return '';
-                }).then(content => ({ name: path.split('/').pop(), content: content.replace(/^.*\bprivate\b.*$/gm, '') }))
+                }).then(content => { 
+                    if(path.includes("example"))
+                        content = content.split('\n').map(line => `// ${line}`).join('\n');
+                    content = content.replace(/^.*\bprivate\b.*$/gm, '');
+                    return { name: path, content: content };
+                 })
             );
             
             const filesMessage = (await Promise.all(fetchPromises)).map(file => `${file.name} file for reference:\`\`\`javascript\n${file.content}\n\`\`\``).join('\n\n');
@@ -161,9 +170,9 @@ let chat = {
                 const response = await getChatGPTResponse({
                     messages: [
                         { role: "system", content: settings.rules  },
-                        { role: "assistant", content: `When user says: spawn or add object, then spawn it at near player position: ${playerLookPoint}` },
+                        //{ role: "assistant", content: `When user says: spawn or add object, then spawn it at near player position: ${playerLookPoint}` },
                         { role: "system", content: filesMessage },
-                        { role: "user", content: `${previousUserMessages}\n\nCurrent code:\n\`\`\`javascript\n${code}\n\`\`\`\n\nUpdate code below, Rewrite JavaScript code that will; ${this.params.lastText}` }
+                        { role: "user", content: `${previousUserMessages}\n\nCurrent code:\n\`\`\`javascript\n${code}\n\`\`\`\n\nUpdate code below, ${settings.importantRules}Rewrite JavaScript code that will; ${this.params.lastText}` }
                     ],
                     signal: this.abortController.signal
                 });

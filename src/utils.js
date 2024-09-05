@@ -51,8 +51,7 @@ function InitVue(obj, args = {}) {
                     hashParams.set(key, JSON.stringify(newValue));
                     window.location.hash = hashParams.toString();
                     //history.pushState(null, document.title, `#${hashParams.toString()}`);
-                    if (updatedFromHash)
-                        obj.params[key + "Changed"]?.call(obj);
+                    obj.params[key + "Changed"]?.call(obj.params, updatedFromHash);
                 };
 
             return watchers;
@@ -351,3 +350,19 @@ function Object3DToHierarchy(gltf) {
     return buildHierarchy(rootObject);
 }
 
+
+
+async function fetchFilesFromDir(dir) {
+    const response = await fetch(dir);
+    const text = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/html');
+    const fileLinks = doc.querySelectorAll('a');
+
+    const files = Array.from(fileLinks).map(link => {
+        const path = link.getAttribute('href');
+        return path.endsWith('.js') ? path : null;
+    }).filter(file => file); // Filter out any null values
+
+    return files;
+}

@@ -38,7 +38,10 @@ globalThis.Character = Character;
 import { KeyBinding } from './core/KeyBinding';
 globalThis.KeyBinding = KeyBinding;
 globalThis.THREE = THREEImport;
-globalThis.CANNON = CANNONImport;
+(function(){
+    globalThis.CANNON = CANNONImport;    
+})();
+
 /*
 for (const key in THREEImport) {
     if (!key.startsWith('Math') && !key.startsWith('Audio')) {
@@ -98,3 +101,4 @@ globalThis.Swal = Swal.mixin({
         }
     }
 });
+

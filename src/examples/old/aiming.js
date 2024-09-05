@@ -13,29 +13,15 @@ var textPrompt = globalThis.textPrompt = document.createElement('div');
 textPrompt.style.cssText = "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);";
 document.body.appendChild(textPrompt);
 
+// Create crosshair
+var crosshair = globalThis.crosshair = document.createElement('div');
+crosshair.style.cssText = "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; border: 2px solid white; border-radius: 50%;";
+document.body.appendChild(crosshair);
+
 var loader = globalThis.loader = new GLTFLoader();
 
 var playerModel = globalThis.playerModel = await loader.loadAsync('build/assets/boxman.glb');
 expose(playerModel.scene, "player");
-
-class GrenadeProjectile extends BaseObject {
-    constructor(position, velocity, explosionRadius = 2, damage = 50) {
-        super(new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({ color: 0xff0000 })), true);
-        this.setPosition(position);
-        this.body.velocity.copy(velocity);
-        this.explosionRadius = explosionRadius;
-        this.damage = damage;
-        this.updateOrder = 1;
-    }
-
-    update(timeStep) {
-        super.update(timeStep);
-
-        // Check for collisions
-        const hits = world.physicsWorld.bodies.filter(body => body !== this.body && body.material !== defaultMaterial && this.body.position.distanceTo(body.position) < this.explosionRadius);
-      
-    }
-}
 
 class Player extends Character {
     constructor(model) {
@@ -45,18 +31,12 @@ class Player extends Character {
         this.remapAnimations(model.animations);
         this.actions.interract = new KeyBinding("KeyR");
         this.originalSensitivity = world.cameraOperator.sensitivity.clone();
-        this.actions.throwGrenade = new KeyBinding("MouseLeft");
+        this.actions.throwPistol = new KeyBinding("KeyG");
         this.actions.aim = new KeyBinding("MouseRight");
         this.aimingSpeed = 0.5;
         this.aimingFOV = 40;
         this.aimingOffset = new THREE.Vector3(-0.5, 0.3, 0.0);
         this.originalFOV = world.camera.fov;
-        this.grenadeVelocity = new THREE.Vector3();
-        this.grenadeVelocity.setLength(20);
-    }
-
-    update(timeStep) {
-        super.update(timeStep);
     }
 
     remapAnimations(animations) {
@@ -82,19 +62,35 @@ class Player extends Character {
             }
         }
 
-        // Shoot grenade
-        if (this.actions.throwGrenade.isPressed) {
-            const grenade = new GrenadeProjectile(this.rhand.getWorldPosition(new THREE.Vector3()), this.grenadeVelocity);
-            grenade.addToWorld(world);
+        // Handle aiming mode
+        if (this.actions.aim.isPressed) {
+            world.camera.fov = this.aimingFOV;
+            world.cameraOperator.sensitivity.x = this.aimingSpeed;
+            world.cameraOperator.sensitivity.y = this.aimingSpeed;
+            // Apply offset relative to camera rotation
+            const cameraDirection = world.camera.getWorldDirection(new THREE.Vector3());
+            const rotatedOffset = this.aimingOffset.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(cameraDirection.x, cameraDirection.z));
+            world.cameraOperator.target.add(rotatedOffset);
+            crosshair.style.display = 'block';
+
+            // Rotate the player towards the aim direction
+            const aimDirection = world.camera.getWorldDirection(new THREE.Vector3());
+            aimDirection.y = 0; // Ignore vertical component
+            aimDirection.normalize();
+            this.setOrientation(aimDirection,false);
+
+        } else {
+            world.camera.fov = this.originalFOV;
+            world.cameraOperator.sensitivity.x = this.originalSensitivity.x;
+            world.cameraOperator.sensitivity.y = this.originalSensitivity.y;
+            crosshair.style.display = 'none';
         }
     }
 
     handleMouseButton(event, code, pressed) {
         super.handleMouseButton(event, code, pressed);
         if (event.button === 0 && pressed === true) {
-            // Shoot grenade
-            const grenade = new GrenadeProjectile(this.rhand.getWorldPosition(new THREE.Vector3()), this.grenadeVelocity);
-            grenade.addToWorld(world);
+            // Shoot the pistol
         } else if (event.button === 2 && pressed === true) {
             // Perform another action
         }

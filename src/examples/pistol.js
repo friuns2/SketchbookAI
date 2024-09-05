@@ -13,6 +13,7 @@ var textPrompt = globalThis.textPrompt = document.createElement('div');
 textPrompt.style.cssText = "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);";
 document.body.appendChild(textPrompt);
 
+
 var loader = globalThis.loader = new GLTFLoader();
 
 var playerModel = globalThis.playerModel = await loader.loadAsync('build/assets/boxman.glb');
@@ -25,22 +26,19 @@ class Player extends Character {
         this.lhand = model.scene.getObjectByName("lhand");
         this.remapAnimations(model.animations);
         this.actions.interract = new KeyBinding("KeyR");
-        this.bulletSpeed = 10;
-        this.bullets = [];
-        this.reloadTime = 0.5;
-        this.lastShotTime = 0;
-        this.heldWeapon = null;
+        this.originalSensitivity = world.cameraOperator.sensitivity.clone();
+        this.actions.throwPistol = new KeyBinding("KeyG");
+        this.actions.aim = new KeyBinding("MouseRight");
+        this.aimingSpeed = 0.5;
+        this.aimingFOV = 40;
+        this.aimingOffset = new THREE.Vector3(-0.5, 0.3, 0.0);
+        this.originalFOV = world.camera.fov;
+        this.pistol = new Pistol(this.rhand);
     }
 
     update(timeStep) {
         super.update(timeStep);
-        this.bullets.forEach((bullet, index) => {
-            bullet.position.add(bullet.direction.clone().multiplyScalar(this.bulletSpeed * timeStep));
-            if (bullet.position.distanceTo(this.parent.position) > 20) {
-                this.bullets.splice(index, 1);
-                world.remove(bullet);
-            }
-        });
+        this.pistol.update(timeStep);
     }
 
     remapAnimations(animations) {
@@ -48,34 +46,6 @@ class Player extends Character {
             if (a.name === "Idle") a.name = CAnims.idle;
             if (a.name === "Run") a.name = CAnims.run;
         });
-    }
-
-    shoot() {
-        if (Date.now() - this.lastShotTime > this.reloadTime * 1000) {
-            this.lastShotTime = Date.now();
-            const bullet = new Bullet();
-            bullet.position.copy(this.rhand.getWorldPosition());
-            bullet.direction.copy(world.camera.getWorldDirection());
-            world.add(bullet);
-            this.bullets.push(bullet);
-        }
-    }
-
-    attachWeapon(weapon) {
-        if (this.rhand) {
-            this.rhand.attach(weapon);
-            weapon.position.set(0, 0, 0);
-            weapon.rotation.set(0, 0, 0);
-            this.heldWeapon = weapon;
-            world.remove(weapon);
-        }
-    }
-
-    detachWeapon() {
-        if (this.heldWeapon) {
-            this.heldWeapon.removeFromParent();
-            this.heldWeapon = null;
-        }
     }
 
     inputReceiverUpdate(deltaTime) {
@@ -98,46 +68,61 @@ class Player extends Character {
 
     handleMouseButton(event, code, pressed) {
         super.handleMouseButton(event, code, pressed);
-        if (event.button === 0 && pressed === true && this.heldWeapon) {
-            this.shoot();
+        if (event.button === 0 && pressed === true) {
+            this.pistol.shoot();
         } else if (event.button === 2 && pressed === true) {
             // Perform another action
         }
     }
 
 }
+
+class Pistol extends THREE.Object3D {
+    constructor(parent) {
+        super();
+        parent.attach(this);
+        this.bulletSpeed = 10;
+        this.bullets = [];
+        this.reloadTime = 0.5;
+        this.lastShotTime = 0;
+    }
+
+    update(timeStep) {
+        this.bullets.forEach((bullet, index) => {
+            bullet.position.add(bullet.direction.clone().multiplyScalar(this.bulletSpeed * timeStep));
+            if (bullet.position.distanceTo(this.parent.position) > 20) {
+                this.bullets.splice(index, 1);
+                world.remove(bullet);
+            }
+        });
+    }
+
+    shoot() {
+        if (Date.now() - this.lastShotTime > this.reloadTime * 1000) {
+            this.lastShotTime = Date.now();
+            const bullet = new Bullet();
+            bullet.position.copy(this.parent.getWorldPosition());
+            bullet.direction.copy(world.camera.getWorldDirection());
+            world.add(bullet);
+            this.bullets.push(bullet);
+        }
+    }
+}
+
 class Bullet extends THREE.Mesh {
     constructor() {
         super(new THREE.SphereGeometry(0.1), new THREE.MeshBasicMaterial({ color: 'red' }));
         this.direction = new THREE.Vector3();
     }
 }
-class Weapon extends THREE.Object3D {
-    constructor(model) {
-        super();
-        this.add(model);
-        this.interract = function(player){
-            player.attachWeapon(this);
-            world.remove(this);
-        }
-    }
-}
-addMethodListener(world, world.update, function () {
-    TWEEN.update();
-});
+
 var player = globalThis.player = new Player(playerModel);
 player.setPosition(0, 0, -5);
 world.add(player);
 
-addMethodListener(player, player.inputReceiverInit, function () {
+addMethodListener(player, "inputReceiverInit", function () {
     world.cameraOperator.setRadius(1.6)
 });
 player.takeControl();
-
-// Add pistol on ground
-var pistolModel = globalThis.pistolModel = await loader.loadAsync('build/assets/pistol.glb');
-var pistol = new Weapon(pistolModel.scene);
-pistol.position.set(0, 0, -1);
-world.add(pistol);
 
 world.startRenderAndUpdatePhysics?.();

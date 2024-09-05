@@ -1,11 +1,12 @@
 function addMethodListener(object, methodName, extension) {
-    const originalMethod = object[methodName].bind(object);
+    methodName = methodName.name?.replaceAll("bound ", "") ?? methodName;
+    const originalMethod = object[methodName]//.bind(object);
     snapshot.reset.push(() => {
         object[methodName] = originalMethod;
     });
     object[methodName] = function (...args) {
-        originalMethod(...args);
-        return extension.call(this, ...args);
+        originalMethod.call(object, ...args);
+        return extension.call(object, ...args);
     };
 }
 
@@ -24,6 +25,134 @@ function addMethodListener(object, methodName, extension) {
     var car = new Car(carModel);
     world.add(car);    
     return car;
+}
+
+function SetPivotCenter(gltf) {
+    const model = gltf.scene;
+    const boundingBox = new THREE.Box3().setFromObject(model);
+    const center = boundingBox.getCenter(new THREE.Vector3());
+    model.position.x -= center.x * gltf.scene.scale.x;
+    model.position.z -= center.z * gltf.scene.scale.z;
+    model.position.y -= boundingBox.min.y * gltf.scene.scale.y;
+    const parent = new THREE.Object3D();
+    parent.add(model);
+    gltf.scene = parent;
+}
+function GetPlayerFront(distance = 2) {
+    let playerLookPoint = new THREE.Vector3();
+
+    (globalThis.player ?? world.characters[0]).getWorldPosition(playerLookPoint);
+    let direction = new THREE.Vector3(0, 0, -1);
+    direction.applyQuaternion(world.camera.quaternion);
+    playerLookPoint.add(direction.multiplyScalar(distance));    
+    return playerLookPoint;
+}
+THREE.Object3D.prototype.setPosition = function (x,y,z) {
+    this.position.set(x,y,z);    
+}
+let defaultMaterial = new CANNON.Material('defaultMaterial');
+defaultMaterial.friction = 0.3;
+class BaseObject extends THREE.Object3D {
+    updateOrder = 0;
+    constructor(model, mass = 1) {
+        super();        
+        const bbox = new THREE.Box3().setFromObject(model);
+        const size = bbox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+        const center = new THREE.Vector3();        
+        bbox.getCenter(center);
+        model.position.copy(center.negate());
+        this.add(model);
+        
+        this.body = new CANNON.Body({
+            mass: mass,
+            position: Utils.cannonVector(center),
+            shape: new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z)),
+            material: defaultMaterial
+        });
+        
+    }
+    setPosition(pos) {
+        this.body.position.copy(Utils.cannonVector(pos));
+        this.position.copy(pos);
+    }   
+    oldPosition = new THREE.Vector3();
+    oldQuaternion = new THREE.Quaternion();
+    executeOneTime = true;
+    update() {
+        
+        const newPosition = Utils.threeVector(this.body.position);
+        const newQuaternion = Utils.threeQuat(this.body.quaternion);
+
+        if (!this.executeOneTime) {
+            this.position.copy(newPosition);
+            this.quaternion.copy(newQuaternion);
+            this.oldPosition.copy(this.position);
+            this.oldQuaternion.copy(this.quaternion);
+        } else {
+            this.body.position.copy(Utils.cannonVector(this.position));
+            this.body.quaternion.copy(Utils.cannonQuat(this.quaternion));
+        }
+        this.executeOneTime = false;
+    }
+    addToWorld(world) {
+        world.graphicsWorld.add(this);
+        world.physicsWorld.add(this.body);
+        world.updatables.push(this);
+    }
+    removeFromWorld(world) {
+        world.graphicsWorld.remove(this);
+        world.physicsWorld.remove(this.body);
+    }
+}
+
+THREE.Object3D.prototype.removeFromParent = function () {
+    //removeFromParentPreserveScaleAndKeepWorldPosition
+    if (!this.parent) return;
+    
+    this.updateWorldMatrix(true, true);
+    const worldScale = this.getWorldScale(new THREE.Vector3());
+    const worldPosition = this.getWorldPosition(new THREE.Vector3());
+    const worldQuaternion = this.getWorldQuaternion(new THREE.Quaternion());
+    
+    this.parent.remove(this);
+    this.updateWorldMatrix(true, true);
+    world.add(this);
+    this.scale.copy(worldScale);
+    this.setPosition(worldPosition);  
+    this.quaternion.copy(worldQuaternion);
+};
+
+function expose(obj,name = obj.name) {
+    try {
+        requestAnimationFrame(() => {
+
+            const folder = world.gui.addFolder(name);
+            const storageKey = `${name}_transform`;
+            const savedValues = JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+            ['position', 'rotation', 'scale'].forEach(prop => {
+                ['x', 'y', 'z'].forEach(axis => {
+                    const name = `${prop.charAt(0).toUpperCase() + prop.slice(1)} ${axis.toUpperCase()}`;
+                    const controller = folder.add(obj[prop], axis, -10.0, 10.0, 0.01).name(name);
+
+                    if (savedValues[name] !== undefined) {
+                        obj[prop][axis] = savedValues[name];
+                        controller.updateDisplay();
+                    }
+
+                    controller.onChange(value => {
+                        savedValues[name] = value;
+                        localStorage.setItem(storageKey, JSON.stringify(savedValues));
+                    });
+                });
+            });
+        });
+
+        
+    }
+    catch (e) {
+        console.log(e);
+    }
 }
 function initCar(car, carModel, h = 0.45) {
     // Set up wheels
@@ -137,140 +266,4 @@ function initCar(car, carModel, h = 0.45) {
             }
         }
     });
-}
-function SetPivotCenter(gltf) {
-    const model = gltf.scene;
-    const boundingBox = new THREE.Box3().setFromObject(model);
-    const center = boundingBox.getCenter(new THREE.Vector3());
-    model.position.x -= center.x * gltf.scene.scale.x;
-    model.position.z -= center.z * gltf.scene.scale.z;
-    model.position.y -= boundingBox.min.y * gltf.scene.scale.y;
-    const parent = new THREE.Object3D();
-    parent.add(model);
-    gltf.scene = parent;
-}
-function GetPlayerFront(distance = 2) {
-    let playerLookPoint = new THREE.Vector3();
-
-    (globalThis.player ?? world.characters[0]).getWorldPosition(playerLookPoint);
-    let direction = new THREE.Vector3(0, 0, -1);
-    direction.applyQuaternion(world.camera.quaternion);
-    playerLookPoint.add(direction.multiplyScalar(distance));    
-    return playerLookPoint;
-}
-
-let defaultMaterial = new CANNON.Material('defaultMaterial');
-defaultMaterial.friction = 0.3;
-class BaseObject extends THREE.Object3D {
-    constructor(model, isStatic = false) {
-        super();        
-        const bbox = new THREE.Box3().setFromObject(model);
-        const size = bbox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
-        const center = new THREE.Vector3();        
-        bbox.getCenter(center);
-        model.position.copy(center.negate());
-        this.add(model);
-        
-        this.body = new CANNON.Body({
-            mass: isStatic ? 0 : 1, // Set mass to 0 for static objects
-            position: Utils.cannonVector(center),
-            shape: new CANNON.Box(new CANNON.Vec3(size.x, size.y, size.z)),
-            material: defaultMaterial
-        });
-        this.body.friction = 0.3;
-    }
-    updateOrder = 0;
-    oldPosition = new THREE.Vector3();
-    oldQuaternion = new THREE.Quaternion();
-    setPosition(pos) {
-        this.body.position.copy(Utils.cannonVector(pos));
-        this.position.copy(pos);
-    }   
-    update() {
-        
-        const newPosition = Utils.threeVector(this.body.position);
-        const newQuaternion = Utils.threeQuat(this.body.quaternion);
-        
-        if (!this.oldPosition.equals(newPosition) || !this.oldQuaternion.equals(newQuaternion)) {
-            this.oldPosition.copy(this.position);
-            this.oldQuaternion.copy(this.quaternion);
-            this.position.copy(newPosition);
-            this.quaternion.copy(newQuaternion);
-        } else {
-            this.body.position.copy(Utils.cannonVector(this.position));
-            this.body.quaternion.copy(Utils.cannonQuat(this.quaternion));
-        }
-        this.oldPosition.copy(this.position);
-        this.oldQuaternion.copy(this.quaternion);
-    }
-    addToWorld(world) {
-        world.graphicsWorld.add(this);
-        world.physicsWorld.add(this.body);
-    }
-    removeFromWorld(world) {
-        world.graphicsWorld.remove(this);
-        world.physicsWorld.remove(this.body);
-    }
-}
-
-THREE.Object3D.prototype.removeFromParent = function () {
-    //removeFromParentPreserveScaleAndKeepWorldPosition
-    if (!this.parent) return;
-    
-    this.updateWorldMatrix(true, true);
-    const worldScale = this.getWorldScale(new THREE.Vector3());
-    const worldPosition = this.getWorldPosition(new THREE.Vector3());
-    const worldQuaternion = this.getWorldQuaternion(new THREE.Quaternion());
-    
-    this.parent.remove(this);
-    this.updateWorldMatrix(true, true);
-    world.add(this);
-    this.scale.copy(worldScale);
-    this.setPosition(worldPosition);  
-    this.quaternion.copy(worldQuaternion);
-};
-
-THREE.Object3D.prototype.addWithPreservedScale = function (child) {
-    child.updateWorldMatrix(true, true);
-    this.updateWorldMatrix(true, true);
-    child.position.set(0,0,0);
-    child.rotation.set(0, 0, 0);
-    world.remove(child);
-    const childWorldScale = child.getWorldScale(new THREE.Vector3());
-    const parentWorldScale = this.getWorldScale(new THREE.Vector3());
-    
-    this.add(child);
-    child.scale.copy(childWorldScale.divide(parentWorldScale));
-};
-function expose(obj,name = obj.name) {
-    try {
-        requestAnimationFrame(() => {
-
-            const folder = world.gui.addFolder(name);
-            const storageKey = `${name}_transform`;
-            const savedValues = JSON.parse(localStorage.getItem(storageKey) || '{}');
-
-            ['position', 'rotation', 'scale'].forEach(prop => {
-                ['x', 'y', 'z'].forEach(axis => {
-                    const name = `${prop.charAt(0).toUpperCase() + prop.slice(1)} ${axis.toUpperCase()}`;
-                    const controller = folder.add(obj[prop], axis, -10.0, 10.0, 0.01).name(name);
-
-                    if (savedValues[name] !== undefined) {
-                        obj[prop][axis] = savedValues[name];
-                        controller.updateDisplay();
-                    }
-
-                    controller.onChange(value => {
-                        savedValues[name] = value;
-                        localStorage.setItem(storageKey, JSON.stringify(savedValues));
-                    });
-                });
-            });
-        });
-
-        
-    }
-    catch (e) {
-        console.log(e);
-    }
 }

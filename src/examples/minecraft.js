@@ -35,9 +35,9 @@ class MinecraftPlayer extends Character {
         });
     }
 
-    update(deltaTime) {
-        super.update(deltaTime);
-        for (let updatable of world.updatables) {
+    inputReceiverUpdate(deltaTime) {
+        super.inputReceiverUpdate(deltaTime);
+        for (let updatable of world.objects) {
             if (updatable.interract && this.position.distanceTo(updatable.position) < 2) {
                 textPrompt.textContent = "Press R to interact";
                 if (this.actions.interract.isPressed) {
@@ -141,7 +141,8 @@ const pistolModel = await loader.loadAsync("build/assets/pistol.glb");
 const pistol = pistolModel.scene.getObjectByName("Object_2");
 pistol.position.set(0.1, -0.1, 0.1);
 pistol.rotation.set(0, Math.PI / 2, 0);
-player.rhand.addWithPreservedScale(pistol);
+player.rhand.attach(pistol);
+
 expose(pistol, "pistol");
 world.startRenderAndUpdatePhysics?.();
 

@@ -3,6 +3,11 @@
 let lastEvalCode = '';
 async function Eval(content) 
 {   
+    if(!content.trim())
+    {
+        console.error("empty code");
+        return;
+    }
     chat.variant.lastError = '';
     
     var code = //"(async () => {\n" +
@@ -37,6 +42,9 @@ async function Eval(content)
 var originalConsoleError = console.error;
 console.error = (...args) => {
     if (args[0].message === "The user has exited the lock before this request was completed.")
+        return;
+    //wwwwif(args[0].message.includes("Uncaught TypeError: Cannot read properties of undefined (reading '_wakeUpAfterNarrowphase')")) return;
+    if(args[0].message.includes("Cannot read properties of undefined (reading '_wakeUpAfterNarrowphase')"))
         return;
 
     if (globalThis.chat) {
@@ -79,3 +87,4 @@ window.addEventListener('unhandledrejection', function(event) {
 window.addEventListener('error', function (event) {
     console.error(event);
 });
+
