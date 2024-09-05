@@ -37,7 +37,7 @@ class MinecraftPlayer extends Character {
 
     inputReceiverUpdate(deltaTime) {
         super.inputReceiverUpdate(deltaTime);
-        for (let updatable of world.objects) {
+        for (let updatable of world.updatables) {
             if (updatable.interract && this.position.distanceTo(updatable.position) < 2) {
                 textPrompt.textContent = "Press R to interact";
                 if (this.actions.interract.isPressed) {

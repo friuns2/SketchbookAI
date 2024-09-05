@@ -52,7 +52,7 @@ class Player extends Character {
         textPrompt.textContent = "";
 
         // Check for interactable objects within range
-        for (let updatable of world.objects) {
+        for (let updatable of world.updatables) {
             if (updatable.interract && this.position.distanceTo(updatable.position) < 2) {
                 textPrompt.textContent = "Press R to interact";
                 if (this.actions.interract.isPressed) {
