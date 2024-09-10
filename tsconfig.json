@@ -3,7 +3,7 @@
         "src/**/*"
 , "src/ts/vehicles/test.js", "build/types/vehicles/index.js", "src/index.js", "src/codeTemplate.js"    ],
     "compilerOptions": {
-        "module": "esnext",
+        "module": "es2022",
         "target": "es2017",
         "sourceMap": true,
         "moduleResolution": "node",
@@ -15,17 +15,6 @@
         "paths": {
             "cannon" : ["src/lib/cannon/cannon"]
         },
-        "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "lib": ["es2017", "dom"],
-        "allowJs": true,
-        "checkJs": false,
-        "strict": false,
-        "noImplicitAny": false,
-        "strictNullChecks": false,
-        "noEmit": true,
-        "isolatedModules": true
+  //      "allowJs": true
     }
 } 

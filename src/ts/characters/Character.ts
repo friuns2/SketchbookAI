@@ -295,7 +295,7 @@ export class Character extends THREE.Object3D implements IWorldEntity
 			}
 			else if (code === 'KeyR' && pressed === true && event.shiftKey === true)
 			{
-				this.world.restartScenario();
+				//this.world.restartScenario();
 			}
 			else
 			{

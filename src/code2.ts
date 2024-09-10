@@ -1,9 +1,9 @@
+export {};
+let GLTFLoader= THREE.GLTFLoader; 
 //IMPORTANT: Always use AutoScale(model, scale) to scale the model
 //IMPORTANT: Always use expose(variable, name) to expose the parameters to GUI
+//IMPORTANT: Assign animation names like this: animations.forEach(a => { if (a.name === "Idle") a.name = CAnims.idle; if (a.name === "Run") a.name = CAnims.sprint; });
 
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import * as THREE from 'three';
-import TWEEN from '@tweenjs/tween.js';
 
 let world = new World();
 await world.initialize('build/assets/world.glb');
@@ -15,6 +15,7 @@ document.body.appendChild(textPrompt);
 
 
 let playerModel = await loadAsync('build/assets/boxman.glb');
+
 expose(playerModel.scene, "player");
 AutoScale(playerModel.scene, 1.7);
 addMethodListener(world, world.update, function () {
@@ -70,14 +71,14 @@ class Bullet extends THREE.Mesh {
 class Player extends Character {
     rhand: THREE.Object3D | null;
     pistol: Pistol | null;
-
-    constructor(model: THREE.Object3D) {
+    health:100;
+    constructor(model: THREE.GLTF) {
         super(model);
-        this.rhand = model.getObjectByName("rhand");
+        this.rhand = model.scene.getObjectByName("rhand");
         this.pistol = null;
         
         // Load the pistol model
-        loader.loadAsync('build/assets/pistol.glb').then(gltf => {
+        loadAsync('build/assets/pistol.glb').then(gltf => {
             if (this.rhand) {
                 this.pistol = new Pistol(this.rhand);
                 this.pistol.attach(gltf.scene);
@@ -106,11 +107,36 @@ class Player extends Character {
     }
 }
 
-let player: Player = new Player(playerModel.scene);
-expose(player.speed, "player speed");
+
+class Zombie extends Character {
+    target: Player;
+    constructor(model: THREE.GLTF, target: Player) {
+        super(model);
+        this.target = target;
+        this.setBehaviour(new FollowTarget(target, 2));
+    }
+
+    update(timeStep: number): void {
+        super.update(timeStep);
+        if (this.position.distanceTo(this.target.position) < 1) {
+            this.target.health -= 1;
+            console.log("Zombie hit player! Health:", this.target.health);
+        }
+    }
+}
+
+let player: Player = new Player(playerModel);
+expose(player.moveSpeed, "player speed");
 player.setPosition(0, 0, -5);
 world.add(player);
 
 player.takeControl();
 
-world.startRenderAndUpdatePhysics?.();
+// Create a zombie
+let zombieModel = await loadAsync('build/assets/zombie.glb'); // Replace with the actual zombie model
+AutoScale(zombieModel.scene, 1.5); // Adjust the scale as needed
+let zombie = new Zombie(zombieModel, player);
+zombie.setPosition(5, 0, 0); // Set the initial position of the zombie
+world.add(zombie);
+
+// ... rest of the code

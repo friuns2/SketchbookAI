@@ -62,8 +62,7 @@ function GetPlayerFront(distance = 2) {
 THREE.Object3D.prototype.setPosition = function (x,y,z) {
     this.position.set(x,y,z);    
 }
-let defaultMaterial = new CANNON.Material('defaultMaterial');
-defaultMaterial.friction = 0.3;
+
 class BaseObject extends THREE.Object3D {
     updateOrder = 0;
     constructor(model, mass = 1) {
@@ -133,6 +132,31 @@ THREE.Object3D.prototype.removeFromParent = function () {
     this.setPosition(worldPosition);  
     this.quaternion.copy(worldQuaternion);
 };
+
+function AutoScale(model, approximateScaleInMeters = 5) {
+    const boundingBox = new THREE.Box3().setFromObject(model);
+    const size = new THREE.Vector3();
+    boundingBox.getSize(size);
+
+    const maxDimension = Math.max(size.x, size.y, size.z);
+
+    let scaleFactor = approximateScaleInMeters / maxDimension;
+
+    // Determine if we need to scale by 1, 100, or 1000
+    if (maxDimension > approximateScaleInMeters * 100 * 3) {
+        scaleFactor = 0.001;
+    } else if (maxDimension > approximateScaleInMeters * 10 * 3) {
+        scaleFactor = 0.01;
+    } else if (maxDimension > approximateScaleInMeters * 3) {
+        scaleFactor = 0.1;
+    } else {
+        scaleFactor = 1;
+    }
+
+    // Apply the calculated scale to the model
+    model.scale.setScalar(scaleFactor);
+
+}
 
 function expose(obj, name = obj.name) {
 
@@ -280,3 +304,5 @@ function initCar(car, carModel, h = 0.45) {
         }
     });
 }
+
+

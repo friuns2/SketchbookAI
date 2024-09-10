@@ -36,6 +36,7 @@
     },
     "dependencies": {
         "@google/generative-ai": "^0.17.1",
+        "@tweenjs/tween.js": "^25.0.0",
         "install": "^0.13.0",
         "jquery": "^3.6.0",
         "npm": "^10.8.3",

@@ -10,16 +10,19 @@ async function Eval(content)
     }
     chat.variant.lastError = '';
     
-    var code = //"(async () => {\n" +
-     content
+    content = content.replace(/export |import .*?;/gs, ""); 
+
+    let compiledCode = compileTypeScript(content+(settings.enableBreakpoints ? "\n;debugger;" : ";console.log('executed');"));
+
+
+    var code = compiledCode
         .replace(/^.*(?:new World\().*$\n?/gm, '')
         .replace(/^.*(?:world\.initialize).*$\n?/gm, '')
         .replace(/world\.render\(world\);/g, '')
-        .replace(/\b(let|const)\s+(\w+)\s*=/g, 'var $2 = globalThis.$2 =')        
-        + (settings.enableBreakpoints ? ";debugger;" : ";console.log('executed');")
-        //+ "\n})();"
+        .replace(/\b(let|const)\s+(\w+)\s*=/g, 'var $2 = globalThis.$2 =')       
+        
             
-      
+    
     if (chat.currentVariant!=0)
         console.log(content);
     if(content.includes("world.update = "))
@@ -44,7 +47,7 @@ console.error = (...args) => {
     if (args[0].message === "The user has exited the lock before this request was completed.")
         return;
     //wwwwif(args[0].message.includes("Uncaught TypeError: Cannot read properties of undefined (reading '_wakeUpAfterNarrowphase')")) return;
-    if(args[0].message.includes("Cannot read properties of undefined (reading '_wakeUpAfterNarrowphase')"))
+    if(args[0]?.message?.includes("Cannot read properties of undefined (reading '_wakeUpAfterNarrowphase')"))
         return;
 
     if (globalThis.chat) {
@@ -64,12 +67,15 @@ console.error = (...args) => {
                 return this.message;
             }
         }
+        ResetState();
+        /*
         if (chat.currentVariant != 0) {
-            chat.switchVariant(0, false).then(() => {
+            chat.switchVariant(0).then(() => {
                 chat.lastError = error;
             });
 
         }
+        */
     }
     originalConsoleError(...args);
     

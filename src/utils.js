@@ -74,7 +74,7 @@ function InitVue(obj, args = {}) {
             fileName = "index.html";
             content = match[0];
         }
-        else if (match[1]) {
+        else if (match[1]?.includes(".")) {
             fileName = match[1].trim();
             content = match[3];
             if(!correctFormat)
@@ -102,6 +102,7 @@ function InitVue(obj, args = {}) {
     return { messageWithoutCodeBlocks, files };
 }
 var snapshot;
+function ResetState(){}
 function SaveState() {
     snapshot = {
         reset: [],
@@ -233,24 +234,6 @@ if (!navigator.serviceWorker && !window.location.hostname.startsWith('192')) {
 
 
 
-const originalFindByName = THREE.AnimationClip.findByName;
-THREE.AnimationClip.findByName = (clipArray, name) => {
-    const clip = originalFindByName(clipArray, name);
-    if (clip === null && clipArray.length > 0) {
-        let bestMatch = null;
-        let bestScore = 0;
-        for (let i = 0; i < clipArray.length; i++) {
-            const score = getSimilarityScore(name, clipArray[i].name);
-            if (score > bestScore && score > 0.4) {
-                bestScore = score;
-                bestMatch = clipArray[i];
-            }
-        }
-        console.warn(`Animation clip "${name}" not found, returning the first clip as fallback.`);
-        return bestMatch;
-    }
-    return clip;
-};
 
 function getSimilarityScore(str1, str2) {
     if(!str1||!str2)
@@ -291,30 +274,6 @@ function getSimilarityScore(str1, str2) {
     return (1 - distance / maxLen);
 }
 
-function AutoScale(model, approximateScaleInMeters = 5) {
-    const boundingBox = new THREE.Box3().setFromObject(model);
-    const size = new THREE.Vector3();
-    boundingBox.getSize(size);
-
-    const maxDimension = Math.max(size.x, size.y, size.z);
-
-    let scaleFactor = approximateScaleInMeters / maxDimension;
-
-    // Determine if we need to scale by 1, 100, or 1000
-    if (maxDimension > approximateScaleInMeters * 100 * 3) {
-        scaleFactor = 0.001;
-    } else if (maxDimension > approximateScaleInMeters * 10 * 3) {
-        scaleFactor = 0.01;
-    } else if (maxDimension > approximateScaleInMeters * 3) {
-        scaleFactor = 0.1;
-    } else {
-        scaleFactor = 1;
-    }
-
-    // Apply the calculated scale to the model
-    model.scale.setScalar(scaleFactor);
-
-}
 
 
 function Object3DToHierarchy(gltf) {
@@ -365,4 +324,17 @@ async function fetchFilesFromDir(dir,fileType) {
     }).filter(file => file); // Filter out any null values
 
     return files;
+}
+
+function compileTypeScript(code) {
+    const result = ts.transpileModule(code, {
+        compilerOptions: {
+            module: ts.ModuleKind.CommonJS,
+            target: ts.ScriptTarget.ES2015,
+            inlineSourceMap: true,
+            inlineSources: true
+        }
+    });
+
+    return result.outputText;
 }

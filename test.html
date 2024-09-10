@@ -51,60 +51,7 @@
   <div id="result"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
-  <script>
-      require.config({ 
-          paths: { 
-              vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs',              
-          } 
-      });
-
-      require(['vs/editor/editor.main'], async function () {
-     
-          let classNames = await(fetch('paths.txt').then(r=>r.text()));
-          classNames = classNames.replaceAll("\\", "/").replaceAll("\r", "");
-          classNames = classNames.split('\n');
-          classNames.push("src/helpers.js");
-          classNames.push("src/utils.js");
-          classNames.push("src/code.js");
-          const LoadClass = async (className) => {
-
-              let three = className.includes("node_modules/three/");
-              if (!className.includes("build/types/") && !three && !className.startsWith("src/")) return;
-              const text = await (await fetch(className)).text();
-              let code = text.replace(/export |import .*?;/gs, "");
-              //code = code.replaceAll("interface","class");
-              //let code = text.match(/export (?:declare )?(class [\s\S]*)/)?.[1] || text;
-             // if(className.includes("GLTFLoader"))debugger;
-              if(three)
-                code = "declare namespace THREE {"+code+"} "
-              await monaco.languages.typescript.typescriptDefaults.addExtraLib(code, `file:///${className}`);
-          };
-
-          await Promise.all(classNames.map(LoadClass));
-            
-          let editor = monaco.editor.create(document.getElementById('editor'), {
-              value: "export {};\nlet GLTFLoader= THREE.GLTFLoader;\n" + (await fetch('src/code.ts').then(r => r.text())).replace(/export |import .*?;/gs, ""),
-              language: 'typescript',
-              theme: 'vs-dark',
-              
-          });
-
-          monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-              target: monaco.languages.typescript.ScriptTarget.ESNext,
-              module: monaco.languages.typescript.ModuleKind.ESNext,
-              moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-              allowNonTsExtensions: true,
-          });
-          document.getElementById('submit').addEventListener('click', function() {
-              let userCode = editor.getValue();
-              let resultElement = document.getElementById('result');
-
-              if (userCode.trim() === GG_ALL_GAME_CONFIG.correctCode.trim()) {
-                  resultElement.innerHTML = '<span class="correct">Correct! The type error has been fixed.</span>';
-              } else {
-                  resultElement.innerHTML = '<span class="incorrect">Not quite right. Try again!</span>';
-              }
-          });
-      });
+  <script src="codeEditor.js"></script>
+  
   </script>
 </body></html>

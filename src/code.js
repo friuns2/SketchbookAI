@@ -45,8 +45,8 @@ class Pistol extends THREE.Object3D {
         if (Date.now() - this.lastShotTime > this.reloadTime * 1000) {
             this.lastShotTime = Date.now();
             const bullet = new Bullet();
-            bullet.position.copy(this.parent.getWorldPosition());
-            bullet.direction.copy(world.camera.getWorldDirection());
+            bullet.position.copy(this.parent.getWorldPosition(new THREE.Vector3()));
+            bullet.direction.copy(world.camera.getWorldDirection(new THREE.Vector3()));
             world.add(bullet);
             this.bullets.push(bullet);
         }
@@ -68,7 +68,7 @@ class Player extends Character
         this.rhand = model.scene.getObjectByName("rhand");
         
         // Load the pistol model
-        const pistolModel = loader.loadAsync('build/assets/pistol.glb').then(gltf => {
+        const pistolModel = loadAsync('build/assets/pistol.glb').then(gltf => {
             return gltf.scene;
         });
 

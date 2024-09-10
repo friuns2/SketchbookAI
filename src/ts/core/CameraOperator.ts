@@ -4,7 +4,7 @@ import { World } from '../world/World';
 import { IInputReceiver } from '../interfaces/IInputReceiver';
 import { KeyBinding } from './KeyBinding';
 import { Character } from '../characters/Character';
-import _ = require('lodash');
+import * as _ from 'lodash';
 import { IUpdatable } from '../interfaces/IUpdatable';
 
 export class CameraOperator implements IInputReceiver, IUpdatable

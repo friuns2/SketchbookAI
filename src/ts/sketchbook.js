@@ -1,4 +1,5 @@
 import '../css/main.css';
+
 import * as THREEImport from 'three';
 import * as CANNONImport from 'cannon';
 
@@ -42,18 +43,6 @@ globalThis.THREE = THREEImport;
     globalThis.CANNON = CANNONImport;    
 })();
 
-/*
-for (const key in THREEImport) {
-    if (!key.startsWith('Math') && !key.startsWith('Audio')) {
-        globalThis[key] = THREEImport[key];
-    }
-    else
-    {
-        globalThis["Mathf"] = THREEImport["Math"];
-    }
-}
-Object.assign(globalThis, CANNONImport);
-*/
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 globalThis.GLTFLoader = GLTFLoader;
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
@@ -102,23 +91,3 @@ globalThis.Swal = Swal.mixin({
     }
 });
 
-
-/*
-function exposeModules() {
-    global.exposedModules = global.exposedModules || {};
-    Object.keys(require.cache).forEach((modulePath) => {
-        try {
-            const moduleName = modulePath.split('/').pop().replace('.js', '');
-            if (!global.exposedModules[moduleName]) {
-                global.exposedModules[moduleName] = require(modulePath);
-                console.log(`Exposed module: ${moduleName}`);
-            }
-        } catch (error) {
-            console.error(`Error exposing module at ${modulePath}: ${error.message}`);
-        }
-    });
-    console.log('All modules have been exposed.');
-}
-  // Run the function to expose modules
-  globalThis.exposeModules = exposeModules;
-  */

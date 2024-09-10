@@ -5,6 +5,7 @@ let variantTemplate = {
     files: [],
     processing: false
 }
+
 let chat = {
 
     abortController: null,
@@ -36,10 +37,11 @@ let chat = {
 
     async init() {
         document.addEventListener('pointerlockchange', () => this.isCursorLocked = !!document.pointerLockElement);
-        //globalThis.world = new World();
-        //await world.initialize('build/assets/world.glb');        
+        globalThis.world = new World();
+        await world.initialize('build/assets/world.glb');        
 
         //while (!globalThis.player) { await new Promise(resolve => setTimeout(resolve, 100));}
+
 		//globalThis.SaveReset?.();
 
 
@@ -61,7 +63,7 @@ let chat = {
 
 
             //world.timeScaleTarget=0
-            //Eval(this.variant.files[0].content);
+            Eval(this.variant.files[0].content);
         }, 500);
         
         // Add this new event listener
@@ -116,7 +118,7 @@ let chat = {
     },
     floatingCode: '',
     async sendInput() {
-        let playerLookPoint = VectorToString(GetPlayerFront());
+        
         this.params.lastText = this.inputText || this.params.lastText;
         if(!this.inputText)
         {
@@ -167,7 +169,9 @@ let chat = {
                  })
             );
             
-            const filesMessage = (await Promise.all(fetchPromises)).map(file => `<file name="${file.name}">\n${file.content}\n</file>`).join('\n\n');
+            let filesMessage = (await Promise.all(fetchPromises)).map(file => `<file name="${file.name}">\n${file.content}\n</file>`).join('\n\n');
+
+            filesMessage += Object.entries(files).map(([name, file]) => `<file name="${name}">\n${file.content}\n</file>`).join('\n\n');
             
             // Create a string with previous user messages
             const previousUserMessages = chat.messageLog.length && ("<Previous_user_messages>\n" + chat.messageLog
@@ -185,7 +189,7 @@ let chat = {
                     //    { role: "system", content: settings.rules  },
                         //{ role: "assistant", content: `When user says: spawn or add object, then spawn it at near player position: ${playerLookPoint}` },
                         { role: "system", content: filesMessage },
-                        { role: "user", content: `${previousUserMessages}\n\nCurrent code:\n\`\`\`javascript\n${code}\n\`\`\`\n\n${settings.importantRules}Rewrite current code to accomplish user complain: ${this.params.lastText}` }
+                        { role: "user", content: `${previousUserMessages}\n\nCurrent code:\n\`\`\`typescript\n${code}\n\`\`\`\n\n${settings.importantRules}Rewrite current code to accomplish user complain: ${this.params.lastText}` }
                     ],
                     signal: this.abortController.signal
                 });

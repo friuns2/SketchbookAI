@@ -1,5 +1,6 @@
-import(globalThis.isLocal ? './code.js' : './codeTemplate.js');
-let codeFile = globalThis.isLocal ? "./code.js" : "./codeTemplate.js";
+globalThis.isLocal = true;
+//import(globalThis.isLocal ? './code2.ts' : './codeTemplate.js');
+let codeFile = globalThis.isLocal ? "./code2.ts" : "./codeTemplate.js";
 
 let settings = {
     apiUrl: "",

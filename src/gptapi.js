@@ -1,5 +1,5 @@
 import('https://esm.sh/@huggingface/inference').then(a => { globalThis.HfInference = a.HfInference; });
-globalThis.apiUrl = (globalThis.isLocal ? "http://localhost:3000/" : "https://api.gptcall.net/");
+globalThis.apiUrl = (globalThis.isLocal && false ? "http://localhost:3000/" : "https://api.gptcall.net/");
 globalThis.getChatGPTResponse = async function* ({messages,functions,model=settings.model.selected,signal,apiUrl=settings.apiUrl,apiKey=settings.apiKey}) {
 
     messages = messages.map(message => ({

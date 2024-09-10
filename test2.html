@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/typescript@latest/lib/typescript.js"></script>
+</head>
+
+<body>
+    <script>
+        function compileTypeScript(code) {
+            const result = ts.transpileModule(code, {
+                compilerOptions: {
+                    module: ts.ModuleKind.CommonJS,
+                    target: ts.ScriptTarget.ES2015,
+                    inlineSourceMap: true,
+                    inlineSources: true
+                }
+            });
+
+            return result.outputText;
+        }
+        // Example TypeScript code
+        const typeScriptCode = `
+class Greeter {
+  constructor(private name: string) { }
+  async greet() {
+    console.log(\`Hello, \${this.name}!\`);
+  }
+}
+
+const greeter = new Greeter("world");
+await greeter.greet();
+`;
+
+        // Compile and execute the TypeScript code
+        const compiledCode = compileTypeScript(typeScriptCode);
+        console.log(compiledCode);
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.textContent = compiledCode;
+        document.body.appendChild(script);
+
+    </script>
+</body>
+
+</html>

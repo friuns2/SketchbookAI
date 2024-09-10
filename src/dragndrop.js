@@ -55,14 +55,14 @@
                         });
                         await new Promise(resolve => setTimeout(resolve, 100));
 
-                        var code = await GetSpawnGLBCode(glbFileName, intersectionPoint, true);
+                        var code = await GetSpawnGLBCodeFromFile(glbFileName, intersectionPoint, true);
                         chat.variant.files[0].content += code;
                         Eval(code);
                     } else {
                         console.error('Failed to generate GLB URL');
                     }
                 } else {
-                    var code = await GetSpawnGLBCode(fileName, intersectionPoint);
+                    var code = await GetSpawnGLBCodeFromFile(fileName, intersectionPoint);
                     chat.variant.files[0].content += code;
                     Eval(code);
                 }
@@ -93,16 +93,19 @@
 
     
 })();
-
-async function GetSpawnGLBCode(fileName, intersectionPoint, setPivot = false) {
+async function GetSpawnGLBCodeFromFile(fileName, intersectionPoint=null, setPivot = false) {
     const gltf = await new Promise((resolve, reject) => {
         new GLTFLoader().load(fileName, (gltf) => resolve(gltf), undefined, (error) => reject(error));
     });
+    return GetSpawnGLBCode(gltf, fileName, intersectionPoint, setPivot);
+}
+function GetSpawnGLBCode(gltf,fileName, intersectionPoint=null, setPivot = false) {
+    
     const animations = gltf.animations;
     let isSkinnedMesh = false;
     gltf.scene.traverse(a => isSkinnedMesh ||= a instanceof THREE.SkinnedMesh);
     
-    const modelName = "a"+fileName.split('.').slice(0, -1).join('_').replace(/[^a-zA-Z0-9_]/g, '').substring(0, 7);
+    const modelName = "a"+fileName.split('.').slice(0, -1).join('_').replace(/[^a-zA-Z0-9_]/g, '_').substr(-6);
     let animationsCode = animations && animations.length > 0 ? `
             gltf.animations.forEach(a => {
                 /* CRITICAL: Uncomment and assign correct CAnims to each animation immediately!
@@ -130,8 +133,6 @@ let ${modelName} = new Character(${modelName}Model);
 //CRITICAL: Uncomment and assign hands immediately! Use ${modelName}Model hierarchy to find the correct bones
 //${modelName}.lhand = 
 //${modelName}.rhand = 
-
-${modelName}.setPosition(${intersectionPoint.x.toFixed(2)}, ${intersectionPoint.y.toFixed(2)}, ${intersectionPoint.z.toFixed(2)});
 world.add(${modelName});
 `;
 
@@ -139,7 +140,6 @@ world.add(${modelName});
 //CRITICAL: Uncomment and assign correct scale immediately!
 //AutoScale({gltfScene:${modelName}Model.scene, approximateScaleInMeters: 5});
 ${setPivot ? `SetPivotCenter(${modelName}Model);` : ''}
-${modelName}Model.scene.position.copy(${VectorToString(intersectionPoint)});
 world.graphicsWorld.add(${modelName}Model.scene);
 /*
 const ${modelName}Model = new TrimeshCollider(${modelName}Model.scene, {
@@ -149,7 +149,7 @@ const ${modelName}Model = new TrimeshCollider(${modelName}Model.scene, {
 world.physicsWorld.add(${modelName}Model.body);
 */
 `;
-
+    code += `\n${intersectionPoint ? `${modelName}.setPosition(${intersectionPoint.x.toFixed(2)}, ${intersectionPoint.y.toFixed(2)}, ${intersectionPoint.z.toFixed(2)});` : ''}`
 
     return code;
 }

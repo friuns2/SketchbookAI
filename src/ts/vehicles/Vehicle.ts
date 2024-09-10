@@ -2,7 +2,7 @@ import { Character } from '../characters/Character';
 import * as THREE from 'three';
 import * as CANNON from 'cannon';
 import { World } from '../world/World';
-import _ = require('lodash');
+import * as _ from 'lodash';
 import { KeyBinding } from '../core/KeyBinding';
 import { VehicleSeat } from './VehicleSeat';
 import { Wheel } from './Wheel';

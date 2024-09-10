@@ -123,13 +123,24 @@
         <button id="show-3d-picker" class="fixed top-16 left-4 transform bg-transparent border-none z-50" onclick="picker.openModelPicker()">
             <i class="fas fa-cube" style="font-size: 24px; color: #000;"></i>
         </button>
+   
     </div>
     
     <!-- Add this new div for the context menu -->
     <div id="contextMenu" class="absolute hidden border shadow-md rounded-md p-2">
         <button id="copyCoordinates" class="w-full text-left hover:bg-gray-100 px-2 py-1 rounded">Copy 3D Coordinates</button>                
     </div>
-    
+    <div id="editorApp" >
+        <button id="toggleEditor" class="fixed top-16 right-4 transform bg-transparent border-none z-50" @click="toggleEditor">
+            <i class="fas fa-code" style="font-size: 24px; color: #000;"></i>
+        </button>
+        <button id="runCode" class="fixed top-28 right-4 transform bg-transparent border-none z-50" @click="runCode">
+            <i class="fas fa-play" style="font-size: 24px; color: #000;"></i>
+        </button>
+        <div id="editorElement" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;" v-if="showEditor"></div>
+    </div>
+    <script src="https://unpkg.com/typescript@latest/lib/typescript.js"></script>
+
 
     <script src="build/sketchbook.min.js"></script>
     <script src="src/helpers.js"></script>
@@ -142,8 +153,9 @@
     <script src="src/gptapi.js"></script>
     <script src="src/index.js"></script>
     <script src="localSettings.js"></script>
-    
     <script src="src/tts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+    <script src="codeEditor.js"></script>
 
 </body>
 </html>
