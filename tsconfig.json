@@ -1,7 +1,12 @@
 {
     "include": [
-        "src/**/*"
-, "src/ts/vehicles/test.js", "build/types/vehicles/index.js", "src/index.js", "src/codeTemplate.js"    ],
+        "src/**/*",
+        "src/**/*.tsm",
+        "src/ts/vehicles/test.js",
+        "build/types/vehicles/index.js",
+        "src/index.js",
+        "src/codeTemplate.js"        
+    ],
     "compilerOptions": {
         "module": "es2022",
         "target": "es2017",
@@ -13,8 +18,9 @@
         //"outFile": "./types/index.d.ts",
         "baseUrl": ".",
         "paths": {
-            "cannon" : ["src/lib/cannon/cannon"]
+            "cannon": ["src/lib/cannon/cannon"]
         },
-        "allowJs": true
+        //"allowJs": true,
+        
     }
 } 

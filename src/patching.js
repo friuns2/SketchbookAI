@@ -61,12 +61,12 @@ var files = {};
     GLTFLoader.prototype.load = function (url, onLoad, onProgress, onError) {
         originalLoad.call(this, url, (gltf) => {
 
-            const animations = gltf.animations?.length>0 ? `\nAnimation names:`+gltf.animations.map(animation => animation.name).join(', ') : '';
+          //  const animations = gltf.animations?.length>0 ? `\nAnimation names:`+gltf.animations.map(animation => animation.name).join(', ') : '';
             let content = 
                 GetSpawnGLBCode(gltf,url);
                 //Object3DToHierarchy(gltf) + (animations || '');
 
-            if(globalThis.player)
+            if (!/(airplane|boxman|car|heli|world|airplane)\.glb/.test(url))
                 files[url] = { name: url, content: content };
             // Call the original onLoad with the modified gltf
             if (onLoad) onLoad(gltf);

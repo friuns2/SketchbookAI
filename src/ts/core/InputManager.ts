@@ -248,12 +248,9 @@ export class InputManager implements IUpdatable
 	}
 
 	public onMouseDown(event: MouseEvent): void
-	{
-		if (!(event.target instanceof HTMLCanvasElement) && (event.target as HTMLElement).id !== 'floating-code') {
-			return;
-		}
+	{		
 		if (event.button === 0) { // Check if the left mouse button is clicked
-			if (this.pointerLock) {
+			if (this.pointerLock && (event.target instanceof HTMLCanvasElement) || (event.target as HTMLElement).id === 'floating-code') {
 				this.domElement.requestPointerLock();
 			} else {
 				this.domElement.addEventListener('mousemove', this.boundOnMouseMove, false);

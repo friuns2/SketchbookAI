@@ -134,8 +134,19 @@ THREE.Object3D.prototype.removeFromParent = function () {
 };
 
 function AutoScale(model, approximateScaleInMeters = 5) {
-    const boundingBox = new THREE.Box3().setFromObject(model);
+    
+      // Create a single bounding box for all objects combined
+      const boundingBox = new THREE.Box3();
+
+      model.traverse(function (object) {
+          if (object.isMesh) {
+              object.geometry.computeBoundingBox();
+              boundingBox.expandByObject(object);
+          }
+      });
+    
     const size = new THREE.Vector3();
+    console.log(model, boundingBox.getSize(size));
     boundingBox.getSize(size);
 
     const maxDimension = Math.max(size.x, size.y, size.z);

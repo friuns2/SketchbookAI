@@ -1,22 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta name="referrer" content="no-referrer-when-downgrade">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.6/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <title>Three.js Load GLB and Show Bounding Box</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
 </head>
+<body>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
+                "GLTFLoader": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/loaders/GLTFLoader.js",
+                "OrbitControls": "https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/controls/OrbitControls.js"
+            }
+        }
+    </script>
 
-<body class="flex items-center justify-center h-screen bg-gray-100">
-    <div class="form-control">
-        <input type="text" placeholder="Type your suggestion here..." class="input input-bordered w-full max-w-xs" />
-        <datalist id="suggestions">
-            <option value="Add a red cube">
-            <option value="Create a bouncing ball">
-            <option value="Make pistol shoot, bullets, kill zombie when hit">
-        </datalist>
-    </div>
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'GLTFLoader';
+        import { OrbitControls } from 'OrbitControls';
+
+        let scene, camera, renderer, controls, model;
+
+        init();
+        loadGLBModel();
+        animate();
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xeeeeee);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 2, 55);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Orbit Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            controls.enableZoom = true;
+
+            // Lighting
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(5, 5, 5).normalize();
+            scene.add(light);
+        }
+
+        function loadGLBModel() {
+            // GLTFLoader to load .glb files
+            const loader = new GLTFLoader();
+            loader.load('build/assets/goblin.glb', function (gltf) {
+                model = gltf.scene;
+                const combinedBoundingBox = new THREE.Box3().setFromObject(model);
+
+                // Log the size of the combined bounding box
+                console.log('Combined Bounding Box Size:', combinedBoundingBox.getSize(new THREE.Vector3()));
+                scene.add(model);
+                // Visualize the combined bounding box with BoxHelper
+                const boxHelper = new THREE.BoxHelper(new THREE.Mesh(new THREE.BoxGeometry(
+                    combinedBoundingBox.max.x - combinedBoundingBox.min.x,
+                    combinedBoundingBox.max.y - combinedBoundingBox.min.y,
+                    combinedBoundingBox.max.z - combinedBoundingBox.min.z
+                )), 0xff0000);
+
+                boxHelper.position.set(
+                    (combinedBoundingBox.max.x + combinedBoundingBox.min.x) / 2,
+                    (combinedBoundingBox.max.y + combinedBoundingBox.min.y) / 2,
+                    (combinedBoundingBox.max.z + combinedBoundingBox.min.z) / 2
+                );
+
+                scene.add(boxHelper);
+
+                console.log('Combined Bounding Box:', combinedBoundingBox);
+            }, undefined, function (error) {
+                console.error(error);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
-
 </html>

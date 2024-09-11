@@ -33,7 +33,7 @@ new Vue({
                         //code = code.replaceAll("interface","class");
                         //let code = text.match(/export (?:declare )?(class [\s\S]*)/)?.[1] || text;
                         // if(className.includes("GLTFLoader"))debugger;
-                        if (three)
+                        if (three && !className.includes("examples"))
                             code = "declare namespace THREE {" + code + "} "
                         await monaco.languages.typescript.typescriptDefaults.addExtraLib(code, `file:///${className}`);
                     };
@@ -42,7 +42,7 @@ new Vue({
 
                     
                     globalThis.editor = monaco.editor.create(document.getElementById('editorElement'), {
-                        value: "export {};\nlet GLTFLoader= THREE.GLTFLoader; \n" + code,
+                        value: "export {};\n" + code,
                         language: 'typescript',
                         theme: 'vs-dark',
                         readOnly: globalThis.isMobile, // Make editor readonly if on mobile
@@ -63,8 +63,9 @@ new Vue({
         runCode() {
             ResetState();            
             const code = globalThis.editor.getValue();
-            chat.variant.files[0].content = code;
+            chat.variant.files[0].content = code.replaceAll("export {};","");
             setTimeout(() => Eval(code), 100);
+            this.toggleEditor();            
         }
     }
 });
