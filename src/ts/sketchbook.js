@@ -45,6 +45,9 @@ globalThis.THREE = THREEImport;
 
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 globalThis.GLTFLoader = GLTFLoader;
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+globalThis.OrbitControls = OrbitControls;
+
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 globalThis.FBXLoader = FBXLoader;
 import { LoadingManager } from './core/LoadingManager';

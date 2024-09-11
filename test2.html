@@ -10,7 +10,7 @@
     </style>
 </head>
 <body>
-    <script type="importmap">
+    <script type="importmap2">
         {
             "imports": {
                 "three": "https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js",
@@ -19,11 +19,11 @@
             }
         }
     </script>
-
+    <script src="build/sketchbook.min.js"></script>
     <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'GLTFLoader';
-        import { OrbitControls } from 'OrbitControls';
+        //import * as THREE from 'three';
+        //import { GLTFLoader } from 'GLTFLoader';
+        //import { OrbitControls } from 'OrbitControls';
 
         let scene, camera, renderer, controls, model;
 
@@ -62,11 +62,14 @@
             const loader = new GLTFLoader();
             loader.load('build/assets/goblin.glb', function (gltf) {
                 model = gltf.scene;
-                const combinedBoundingBox = new THREE.Box3().setFromObject(model);
+                model.updateMatrixWorld(true,true);
+                let tf = SkeletonUtils.clone(gltf.scene);
+                tf.updateMatrixWorld(true,true);
+                const combinedBoundingBox = new THREE.Box3().setFromObject(tf);
 
                 // Log the size of the combined bounding box
                 console.log('Combined Bounding Box Size:', combinedBoundingBox.getSize(new THREE.Vector3()));
-                scene.add(model);
+                scene.add(tf);
                 // Visualize the combined bounding box with BoxHelper
                 const boxHelper = new THREE.BoxHelper(new THREE.Mesh(new THREE.BoxGeometry(
                     combinedBoundingBox.max.x - combinedBoundingBox.min.x,

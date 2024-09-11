@@ -525,7 +525,7 @@ export class Character extends THREE.Object3D implements IWorldEntity
 			// let clip = THREE.AnimationClip.findByName( this.animations, clipName );
 
 			let action = this.actionClips[clipName];
-			if (action === null) {
+			if (!action) {
 				console.warn(`Animation ${clipName} not found!`);
 				return 0;
 			}
@@ -537,7 +537,10 @@ export class Character extends THREE.Object3D implements IWorldEntity
 					element.fadeOut(0.2);
 				}
 			}
-			this.setWeight(action, 1);
+			action.enabled = true;
+			// Need to reduce the speed of animation for it so non-loopable animations dont overflow.
+			//	action.setEffectiveTimeScale(0.9);
+			action.setEffectiveWeight(0.9);
 			action.reset();
 			action.fadeIn(fadeIn);
 
@@ -545,12 +548,7 @@ export class Character extends THREE.Object3D implements IWorldEntity
 		}
 	}
 
-	public setWeight(action, weight: number) {
-		action.enabled = true;
-		// Need to reduce the speed of animation for it so non-loopable animations dont overflow.
-		action.setEffectiveTimeScale(0.7);
-		action.setEffectiveWeight(weight);
-	}
+	
 
 	public springMovement(timeStep: number): void {
 		// Simulator

@@ -27,24 +27,6 @@ expose(playerModel.scene, "player");
 AutoScale(playerModel.scene, 1.7);
 
 
-const loader = new GLTFLoader();
-loader.load('build/assets/goblin.glb', function (gltf) {
-   var model = gltf.scene;
-    
-
-    // Create a single bounding box for all objects combined
-    const combinedBoundingBox = new THREE.Box3();
-
-    model.traverse(function (object) {
-        if (object.isMesh) {
-            object.geometry.computeBoundingBox();
-            combinedBoundingBox.expandByObject(object);
-        }
-    });
-
-    // Log the size of the combined bounding box
-    console.log('Combined Bounding Box Size:', combinedBoundingBox.getSize(new THREE.Vector3()));
-});
 
 // Goblin class
 class Goblin extends Character {

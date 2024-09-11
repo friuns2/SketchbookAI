@@ -29,12 +29,16 @@ CANNON.Body.prototype.constructor = CANNON.Body;
     const gltfCache = new Map();
     const originalLoad = GLTFLoader.prototype.load;
     
-    const cloneGltf = (gltf) => ({
-        ...gltf,
-        animations: gltf.animations.map(a => ({ ...a })),
-        original: gltf,
-        scene: SkeletonUtils.clone(gltf.scene)
-    });
+    const cloneGltf = (gltf) => {
+        const clonedScene = SkeletonUtils.clone(gltf.scene);
+        clonedScene.updateMatrixWorld(true, true);
+        return {
+            ...gltf,
+            animations: gltf.animations.map(a => ({ ...a })),
+            original: gltf,
+            scene: clonedScene,
+        };
+    };
 
     GLTFLoader.prototype.load = function (url, onLoad, onProgress, onError) {
         if (gltfCache.has(url)) {
