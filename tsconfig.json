@@ -1,6 +1,6 @@
 {
     "include": [
-        "src/**/*",
+        "**/*",
         "src/**/*.tsm",
         "src/ts/vehicles/test.js",
         "build/types/vehicles/index.js",
@@ -20,6 +20,7 @@
         "paths": {
             // "cannon" : ["src/lib/cannon/cannon"]
         },
-        //"allowJs": true
+  //      "allowJs": true,
+  //      "checkJs": true
     }
 } 

@@ -346,3 +346,39 @@ export function countSleepyBodies(): any
 }
 
 //#endregion
+
+
+export function stopAllAction(mixer: any): THREE.AnimationMixer
+{
+    var actions = mixer._actions,
+        nActions = mixer._nActiveActions,
+        bindings = mixer._bindings,
+        nBindings = mixer._nActiveBindings;
+
+    mixer._nActiveActions = 0;
+    mixer._nActiveBindings = 0;
+
+    for (var i = 0; i !== nActions; ++i)
+    {
+        reset.call(actions[i]);
+    }
+
+    for (var i = 0; i !== nBindings; ++i)
+    {
+        bindings[i].useCount = 0;
+    }
+
+    return mixer;
+
+    function reset(this: any)
+    {
+        this.paused = false;
+        this.enabled = true;
+
+        this.time = 0; // restart clip
+        this._loopCount = -1; // forget previous loops 
+        this._startTime = null; // forget scheduling
+
+        return this.stopFading().stopWarping();
+    }
+}

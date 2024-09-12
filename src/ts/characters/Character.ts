@@ -39,7 +39,7 @@ export class Character extends THREE.Object3D implements IWorldEntity
 	public materials: THREE.Material[] = [];
 	public mixer: THREE.AnimationMixer;
 	public animations: AnimationClip[];
-	public actionClips = {};
+	
 	// public currentAnimation: string = "idle";
 	// public previousAnimation: AnimationAction;
 
@@ -95,6 +95,7 @@ export class Character extends THREE.Object3D implements IWorldEntity
 	{
 		super();
 		this.readCharacterData(gltf);
+		
 		this.mixer = new THREE.AnimationMixer(gltf.scene);
 		this.setAnimations(gltf.animations);
 
@@ -168,19 +169,7 @@ export class Character extends THREE.Object3D implements IWorldEntity
 	public setAnimations(animations: AnimationClip[]): void
 	{
 		this.animations = animations;
-		this.animations.map(e => {
-			const action = this.mixer.clipAction(e);
-			this.actionClips[e.name] = action;
-
-			if (action.getClip().name == "idle") {
-				// this.previousAnimation = action;
-				action.setEffectiveWeight(1);
-			}
-			else {
-				action.setEffectiveWeight(0);
-			}
-			action.play()
-		})
+		
 	}
 
 	public setArcadeVelocityInfluence(x: number, y: number = x, z: number = x): void
@@ -522,27 +511,22 @@ export class Character extends THREE.Object3D implements IWorldEntity
 		if (this.mixer !== undefined)
 		{
 			// gltf
-			// let clip = THREE.AnimationClip.findByName( this.animations, clipName );
+			let clip = THREE.AnimationClip.findByName( this.animations, clipName );
 
-			let action = this.actionClips[clipName];
-			if (!action) {
+			let action = this.mixer.clipAction(clip);
+			if (action === null)
+			{
 				console.warn(`Animation ${clipName} not found!`);
 				return 0;
 			}
 
-			// Seems like stopAllAction behaviour was changed from fading out to cancelling all fade operations.
-			for (const key in this.actionClips) {
-				if (Object.prototype.hasOwnProperty.call(this.actionClips, key)) {
-					const element = this.actionClips[key] as AnimationAction;
-					element.fadeOut(0.2);
-				}
-			}
-			action.enabled = true;
-			// Need to reduce the speed of animation for it so non-loopable animations dont overflow.
-			//	action.setEffectiveTimeScale(0.9);
-			action.setEffectiveWeight(0.9);
-			action.reset();
+			Utils.stopAllAction(this.mixer);
+
 			action.fadeIn(fadeIn);
+			action.play();
+
+
+			
 
 			return action.getClip().duration;
 		}

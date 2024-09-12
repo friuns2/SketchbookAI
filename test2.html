@@ -90,29 +90,26 @@
 
                 console.log('Combined Bounding Box:', combinedBoundingBox);
 
-                // Find the first bone that has keyframes
-                if (gltf.animations && gltf.animations.length > 0) {
-                    const firstAnimation = gltf.animations[1];
-                    const tracks = firstAnimation.tracks;
-                    
-                    for (let i = 0; i < tracks.length; i++) {
-                        const trackName = tracks[i].name;
-                        if (trackName.endsWith('.position') || trackName.endsWith('.quaternion')) {
-                            const boneName = trackName.split('.')[0];
-                            tf.traverse((object) => {
-                                if (object.isBone && object.name === boneName) {
-                                    rootBone = object;
-                                    console.log('Root bone found:', rootBone.name);
-                                    return;
-                                }
-                            });
-                            if (rootBone) break;
+                // Find the root bone (the bone that actually moves)
+                let potentialRootBones = [];
+                tf.traverse((object) => {
+                    if (object.isBone) {
+                        if (object.name.toLowerCase().includes('hips') || object.name.toLowerCase().includes('root')) {
+                            potentialRootBones.push(object);
                         }
                     }
+                });
+
+                if (potentialRootBones.length > 0) {
+                    // Prioritize 'hips' over 'root' if both exist
+                    rootBone = potentialRootBones.find(bone => bone.name.toLowerCase().includes('hips')) || potentialRootBones[0];
+                    console.log('Root bone found:', rootBone.name);
+                } else {
+                    console.warn('No root bone found.');
                 }
 
                 if (!rootBone) {
-                    console.warn('No bone with keyframes found. Using the first bone in the skeleton.');
+                    console.warn('Root bone not found. Using the first bone in the skeleton.');
                     tf.traverse((object) => {
                         if (object.isBone && !rootBone) {
                             rootBone = object;

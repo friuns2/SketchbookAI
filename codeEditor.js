@@ -63,7 +63,7 @@ new Vue({
         },
         runCode() {
             ResetState();            
-            const code = globalThis.editor.getValue();
+            const code = codeEditor.getValue();
             chat.variant.files[0].content = code.replaceAll("export {};","");
             setTimeout(() => Eval(code), 100);
             this.toggleEditor();            
