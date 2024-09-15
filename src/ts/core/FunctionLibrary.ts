@@ -382,3 +382,17 @@ export function stopAllAction(mixer: any): THREE.AnimationMixer
         return this.stopFading().stopWarping();
     }
 }
+export function getActions(mixer: any): any[]
+{
+	return mixer._actions;
+}
+export function isActive(mixer: any): boolean
+{
+	const actions = mixer._actions;
+	for (let i = 0; i < actions.length; i++) {
+		if (actions[i].isRunning()) {
+			return true;
+		}
+	}
+	return false;
+}

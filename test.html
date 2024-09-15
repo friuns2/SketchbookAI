@@ -1,57 +1,39 @@
-
-<!DOCTYPE html><html lang="en"><head><meta name="referrer" content="no-referrer-when-downgrade">
+<!DOCTYPE html>
+<html lang="en">
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monaco Type Checking Game</title>
-  <style>
-      body {
-          font-family: Arial, sans-serif;
-          background-color: #1e1e1e;
-          color: #d4d4d4;
-          margin: 0;
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-      }
-      #editor {
-          width: 800px;
-          height: 400px;
-          border: 1px solid #454545;
-          margin-bottom: 20px;
-      }
-      #submit {
-          background-color: #0e639c;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          font-size: 16px;
-          cursor: pointer;
-      }
-      #submit:hover {
-          background-color: #1177bb;
-      }
-      #result {
-          font-size: 18px;
-          margin-top: 20px;
-      }
-      .correct {
-          color: #4ec9b0;
-      }
-      .incorrect {
-          color: #f48771;
-      }
-  </style>
+  <title>TypeScript Evaluation with Babel</title>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@babel/preset-typescript"></script>
 </head>
 <body>
-  <h1>Monaco Type Checking Game</h1>
-  <p>Fix the TypeScript errors in the code below:</p>
-  <div id="editor"></div>
-  <button id="submit">Check Types</button>
-  <div id="result"></div>
+  <h1>TypeScript Class Hoisting Example</h1>
+  <div id="output"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
-  <script src="codeEditor.js"></script>
-  
+  <script type="text/typescript">
+    // TypeScript code with class declarations
+    class Animal {
+      constructor(public name: string) {}
+      speak() {
+        return `${this.name} makes a noise.`;
+      }
+    }
+
+    class Dog extends Animal {
+      speak() {
+        return `${this.name} barks.`;
+      }
+    }
+
+    // Instantiate class before its definition (possible with hoisting)
+    const dog = new Dog('Buddy');
+    document.getElementById('output').innerText = dog.speak();
   </script>
-</body></html>
+
+  <script type="text/babel" data-presets="typescript">
+    // Babel will transpile TypeScript to JavaScript in the browser
+    Babel.transformScriptTags(); // This transforms all the <script type="text/typescript">
+  </script>
+</body>
+</html>

@@ -1,9 +1,23 @@
 globalThis.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-let variantTemplate = {
-    content: '',
-    lastError: null,
-    files: [],
-    processing: false
+
+class VariantFile {
+    constructor(name, content) {
+        this.name = name;
+        this.content = content;
+        Vue.observable(this);
+    }
+}
+
+class BotMessage {
+    constructor() {
+        this.content = '';
+        this.lastError = null;
+        /** @type {Array<VariantFile>} */ 
+        this.files = [];        
+        this.processing = false;
+        Vue.observable(this);
+    }
+
 }
 
 let chat = {
@@ -28,7 +42,7 @@ let chat = {
     get isMobile(){
         return window.innerWidth < 768;
     },
-    variants: [structuredClone(variantTemplate),structuredClone(variantTemplate)],
+    variants: [new BotMessage(),new BotMessage()],
     currentVariant: 0,
     get variant(){
         return this.variants[this.currentVariant];
@@ -110,10 +124,10 @@ let chat = {
         this.messageLog.pop();
         this.inputText = this.messageLog[this.messageLog.length - 1]?.user || '';
     },
-    async Clear(){
-        this.variant.content='';
-        this.variant.files = [{ name: 'script.js', content: await fetch("src/"+codeFile).then(response => response.text()) }];
-        
+    async Clear() {
+        this.variant.content = '';
+        const scriptContent = await fetch("src/" + codeFile).then(response => response.text());
+        this.variant.files = [new VariantFile('script.js', scriptContent)];
     },
     floatingCode: '',
     async sendInput() {
@@ -159,7 +173,7 @@ let chat = {
                     alert("Error fetching file: " + e + " " + path);
                     return '';
                 }).then(content => { 
-                    if (path.includes("example") && path.includes(".js"))
+                    if (path.includes("example") && (path.includes(".js") || path.includes(".ts")))
                         content = content.split('\n').map(line => `// ${line}`).join('\n');
                     //  content = `/* ${content} */`; 
                     content = content.replace(/^.*\bprivate\b.*$/gm, '');
@@ -192,15 +206,15 @@ let chat = {
                     signal: this.abortController.signal
                 });
                 this.currentVariant = i;
-                let botMessage = structuredClone(variantTemplate);   
-                botMessage.processing=true;             
+                let botMessage = new BotMessage();
+                botMessage.processing = true;
                 this.variants[i] = botMessage;
                 for await (const chunk of response) {
                     botMessage.content = chunk.message.content;                   
                     if(this.currentVariant == i)
                         this.floatingCode = botMessage.content;
                 }
-                botMessage.processing=false;
+                botMessage.processing = false;
                 console.log(botMessage.content);
           
 
@@ -242,7 +256,7 @@ let chat = {
         let content = variant.content;
         let data = parseFilesFromMessage(content);
         if(data.files.length>0)
-            variant.files = data.files;
+            variant.files = data.files.map(file => new VariantFile(file.name, file.content));
         this.floatingCode = content;    
         
         

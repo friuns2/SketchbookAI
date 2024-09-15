@@ -14,6 +14,22 @@
     
 </head>
 <style>
+input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none; /* Hide the indicator completely */
+}
+
+/* Add styles for other browsers */
+input::-moz-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+
+input::-ms-clear,
+input::-ms-reveal {
+  display: none;
+}
+
     .swal2-popup {
         background: rgba(255, 255, 255, 0.2) !important;
         backdrop-filter: blur(6px) !important;

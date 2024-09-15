@@ -239,10 +239,7 @@ export class Helicopter extends Vehicle implements IControllable, IWorldEntity
 				keys: ['F'],
 				desc: 'Exit vehicle'
 			},
-			{
-				keys: ['Shift', '+', 'R'],
-				desc: 'Respawn'
-			},
+			
 			{
 				keys: ['Shift', '+', 'C'],
 				desc: 'Free camera'

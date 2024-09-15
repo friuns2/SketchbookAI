@@ -320,10 +320,7 @@ export class Car extends Vehicle implements IControllable
 				keys: ['F'],
 				desc: 'Exit vehicle'
 			},
-			{
-				keys: ['Shift', '+', 'R'],
-				desc: 'Respawn'
-			},
+			
 			{
 				keys: ['Shift', '+', 'C'],
 				desc: 'Free camera'

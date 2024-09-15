@@ -1,9 +1,9 @@
-const panel = createUIElement('div', "position: absolute; top: 20px; left: 20px; background-color: rgba(0, 0, 0, 0.5); color: white; padding: 10px; border-radius: 5px;");
+const debugPanel = createUIElement('div', "position: absolute;");
 
 function watch(propAccessor, elementId) {
     const displayElement = createUIElement('div', "font-size: 14px; margin-bottom: 5px;");
     displayElement.id = elementId;
-    panel.appendChild(displayElement);
+    debugPanel.appendChild(displayElement);
     
     function update() {
         const currentValue = propAccessor();        
@@ -327,7 +327,6 @@ function Object3DToHierarchy(gltf) {
     let rootObject = gltf.scene;
     return buildHierarchy(rootObject);
 }
-
 
 
 async function fetchFilesFromDir(dir,fileType) {
