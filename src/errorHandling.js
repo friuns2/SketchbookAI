@@ -9,7 +9,7 @@ async function Eval(content)
         return;
     }
     chat.variant.lastError = '';
-    
+    SetCode(content);
     content = content.replace(/export |import .*?;/gs, ""); 
 
     let compiledCode = compileTypeScript(content+(settings.enableBreakpoints ? "\n;debugger;" : ";console.log('executed');"));

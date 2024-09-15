@@ -1,13 +1,6 @@
-export {};
 
 
-
-
-
-
-
-
-{ }
+export { }
 
 // IMPORTANT: Always use function AutoScale(model: any, approximateSizeInMeters: number) to scale the model
 // IMPORTANT: Always use function expose(variable: any, name: string) to expose the parameters to GUI
@@ -28,67 +21,18 @@ addMethodListener(world, world.update, () => {
 });
 
 class Player extends Character {
-    jetpackEnabled: boolean;
-    jetpackThrust: number;
-    jetpackFuel: number;
-    jetpackFuelMax: number;
-    jetpackFuelConsumption: number;
-    lastJetpackActivation: number;
-    jetpackCooldown: number;
-
-    constructor(model: GLTF) {
-        super(model);
-        this.jetpackEnabled = false;
-        this.jetpackThrust = 10;
-        this.jetpackFuel = 100;
-        this.jetpackFuelMax = 100;
-        this.jetpackFuelConsumption = 1.1;
-        this.lastJetpackActivation = 0;
-        this.jetpackCooldown = 1000;
-        this.setupActions();
-    }
-
-    setupActions(): void {
-        this.actions.jetpack = KeyBinding.CreateKeyBinding("Space");
-    }
-
+    // put player code here
     update(timeStep: number): void {
         super.update(timeStep);
-        this.updateJetpack(timeStep);
-    }
-
-    updateJetpack(timeStep: number): void {
-        if (this.actions.jetpack.isPressed) {
-            this.lastJetpackActivation = Date.now();
-            this.jetpackEnabled = true;
-        } else {
-            this.jetpackEnabled = false;
-        }
-
-        if (this.jetpackEnabled) {
-            this.jetpackFuel -= this.jetpackFuelConsumption * timeStep;
-            this.characterCapsule.body.velocity.y += this.jetpackThrust * timeStep;
-        }
-
-        if (this.jetpackFuel <= 0) {
-            this.jetpackEnabled = false;
-        }
     }
 
     inputReceiverUpdate(deltaTime: number): void {
         super.inputReceiverUpdate(deltaTime);
-        textPrompt.textContent = `Jetpack Fuel: ${Math.floor(this.jetpackFuel)}%`;
     }
 }
 
 const player = new Player(playerModel);
-
 expose(player.moveSpeed, "player speed");
-expose(player.jetpackThrust, "jetpack thrust");
-expose(player.jetpackFuelMax, "jetpack fuel max");
-expose(player.jetpackFuelConsumption, "jetpack fuel consumption");
-expose(player.jetpackCooldown, "jetpack cooldown");
-
 player.setPosition(0, 0, -5);
 world.add(player);
 

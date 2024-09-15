@@ -23,11 +23,15 @@ class Player extends Character {
         this.lhand = model.scene.getObjectByName("lhand");
         this.remapAnimations(model.animations);    
         this.pistol = new Pistol(this.rhand!);
+        this.actions.jetpack = KeyBinding.CreateKeyBinding("Space");
+
     }
 
     update(timeStep: number): void {
         super.update(timeStep);
         this.pistol.update(timeStep);
+        if (this.actions.jetpack.isPressed)
+            this.characterCapsule.body.velocity.y += 10 * timeStep;
     }
 
     private remapAnimations(animations: THREE.AnimationClip[]): void {

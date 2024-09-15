@@ -1,17 +1,24 @@
-function watch(propAccessor) {
-    let lastValue = propAccessor();
+const panel = createUIElement('div', "position: absolute; top: 20px; left: 20px; background-color: rgba(0, 0, 0, 0.5); color: white; padding: 10px; border-radius: 5px;");
+
+function watch(propAccessor, elementId) {
+    const displayElement = createUIElement('div', "font-size: 14px; margin-bottom: 5px;");
+    displayElement.id = elementId;
+    panel.appendChild(displayElement);
     
-    function checkForChanges() {
-        const currentValue = propAccessor();
-        if (JSON.stringify(currentValue) !== JSON.stringify(lastValue)) {
-            const oldValue = lastValue;
-            lastValue = currentValue;
-            console.log(propAccessor+' Value changed:', oldValue, '->', currentValue);
-        }
-        requestAnimationFrame(checkForChanges);
+    function update() {
+        const currentValue = propAccessor();        
+        displayElement.textContent = `${propAccessor}: ${JSON.stringify(currentValue)}`;
+        requestAnimationFrame(update);
     }
     
-    checkForChanges();
+    update();
+}
+
+function createUIElement(type, style) {
+    const element = document.createElement(type);
+    element.style.cssText = style;
+    document.body.appendChild(element);
+    return element;
 }
 
 function InitVue(obj, args = {}) {
@@ -32,9 +39,7 @@ function InitVue(obj, args = {}) {
         });
     };
     updateParamsFromHash();
-    window.addEventListener('hashchange', () => {
-        updateParamsFromHash();
-    });
+    window.addEventListener('hashchange', updateParamsFromHash);
     return {
         data: () => {
             //obj = shallowClone(obj)

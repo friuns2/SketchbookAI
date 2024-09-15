@@ -14,7 +14,6 @@ let chat = {
     globalThis: globalThis,
     document: document,
     suggestions: ['Add a red cube', 'Create a bouncing ball', 'make pistol shoot, bullets, kill zombie when hit'],
-    lastError: null,
     isLoading: false,
     params: {
         chatId: '',
@@ -104,7 +103,7 @@ let chat = {
         navigator.clipboard.writeText(variant.files[0].content)
     },
     onClickError(){
-        this.inputText = this.params.lastText + ' \nPrevious attempt Error: ' + this.lastError.message + ", do not make it again!";
+        this.inputText = this.params.lastText + ' \nPrevious attempt Error: ' + this.variant.lastError.message + ", do not make it again!";
     },
     async undoLastAction() {
 
@@ -237,7 +236,6 @@ let chat = {
     },
   
     async switchVariant(index) {
-        this.lastError = null;
         console.log('switchVariant', index);
         this.currentVariant = index;
         let variant = this.variants[this.currentVariant];
@@ -247,8 +245,8 @@ let chat = {
             variant.files = data.files;
         this.floatingCode = content;    
         
-        if (codeEditor)
-            SetCode(variant.files[0].content);
+        
+            
         if(variant.files.length > 0){
             var code = variant.files[0].content;
             ResetState();

@@ -67,10 +67,18 @@ export class Character extends THREE.Object3D implements IWorldEntity
 	public defaultRotationSimulatorMass: number = 10;
 	public rotationSimulator: RelativeSpringSimulator;
 	public viewVector: THREE.Vector3;
-	 /**
-     * @internal2
-     */
-	public actions: { [action: string]: KeyBinding };
+	
+	public actions: { [key: string]: KeyBinding } = {
+		'up': new KeyBinding('KeyW',   'Movement'),
+		'down': new KeyBinding('KeyS', 'Movement'),
+		'left': new KeyBinding('KeyA', 'Movement'),
+		'right': new KeyBinding('KeyD','Movement'),
+		'run': new KeyBinding('ShiftLeft', 'Run'),
+		'jump': new KeyBinding('Space', 'Jump'),
+		'enter': new KeyBinding('KeyF', 'Enter vehicle'),
+		'enter_passenger': new KeyBinding('KeyG', 'Enter as passenger'),
+		'seat_switch': new KeyBinding('KeyX', 'Switch seat'),
+	};
 	public characterCapsule: CapsuleCollider;
 
 	// Ray casting
@@ -99,6 +107,8 @@ export class Character extends THREE.Object3D implements IWorldEntity
 	constructor(gltf: GLTF)
 	{
 		super();
+		
+		
 		this.readCharacterData(gltf);
 		
 		this.mixer = new THREE.AnimationMixer(gltf.scene);
@@ -119,21 +129,7 @@ export class Character extends THREE.Object3D implements IWorldEntity
 
 		this.viewVector = new THREE.Vector3();
 
-		// Actions
-		this.actions = {
-			'up': new KeyBinding('KeyW'),
-			'down': new KeyBinding('KeyS'),
-			'left': new KeyBinding('KeyA'),
-			'right': new KeyBinding('KeyD'),
-			'run': new KeyBinding('ShiftLeft'),
-			'jump': new KeyBinding('Space'),
-			'use': new KeyBinding('KeyE'),
-			'enter': new KeyBinding('KeyF'),
-			'enter_passenger': new KeyBinding('KeyG'),
-			'seat_switch': new KeyBinding('KeyX'),
-			'primary': new KeyBinding('Mouse0'),
-			'secondary': new KeyBinding('Mouse1'),
-		};
+
 
 		// Physics
 		// Player Capsule
@@ -460,30 +456,34 @@ export class Character extends THREE.Object3D implements IWorldEntity
 
 	public displayControls(): void
 	{
-		this.world.updateControls([
+		const controls = [];
+
+		const groupedControls = {};
+		for (const [action, binding] of Object.entries(this.actions)) {
+			if (binding.description) {
+				if (!groupedControls[binding.description]) {
+					groupedControls[binding.description] = [];
+				}
+				groupedControls[binding.description].push(binding.eventCodes[0].replace('Key', ''));
+			}
+		}
+
+		for (const [desc, keys] of Object.entries(groupedControls)) {
+			controls.push({
+				keys: keys,
+				desc: desc
+			});
+		}
+
+		// Add any additional controls not directly tied to actions
+		controls.push(
 			{
-				keys: ['Alt','+', '←'],
+				keys: ['Alt', '+', '←'],
 				desc: 'Undo'
 			},
 			{
 				keys: ['Alt', '+', '→'],
 				desc: 'Redo'
-			},
-			{
-				keys: ['W', 'A', 'S', 'D'],
-				desc: 'Movement'
-			},
-			{
-				keys: ['Shift'],
-				desc: 'Sprint'
-			},
-			{
-				keys: ['Space'],
-				desc: 'Jump'
-			},
-			{
-				keys: ['F', 'or', 'G'],
-				desc: 'Enter vehicle'
 			},
 			{
 				keys: ['Shift', '+', 'R'],
@@ -492,8 +492,10 @@ export class Character extends THREE.Object3D implements IWorldEntity
 			{
 				keys: ['Shift', '+', 'C'],
 				desc: 'Free camera'
-			},
-		]);
+			}
+		);
+
+		this.world.updateControls(controls);
 	}
 
 	public inputReceiverUpdate(timeStep: number): void
