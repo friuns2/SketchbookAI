@@ -35,9 +35,13 @@ function PatchClone() {
                 if (!gui.__folders[clone.name]) {
                     clone.size = 1;
                     folder = gui.addFolder(clone.name);
-                    folder.add(clone, 'visible').name('Visible');
-                    folder.add(clone, 'size').min(0.001).step(0.001).name('Size');
-                    folder.add(clone.position, 'y', -10, 10).name('Y Offset').step(0.01); // Add Y offset control
+                    folder.visible = folder.add(clone, 'visible').name('Visible');
+                    folder.size = folder.add(clone, 'size').min(0.001).step(0.001).name('Size');
+                    folder.posx = folder.add(clone.position, 'x', -10, 10).name('X Offset').step(0.01);
+                    folder.posy = folder.add(clone.position, 'y', -10, 10).name('Y Offset').step(0.01);
+                    folder.posz = folder.add(clone.position, 'z', -10, 10).name('Z Offset').step(0.01);
+                    folder.rotx = folder.add(clone.rotation, 'x', -Math.PI, Math.PI).name('X Rotation').step(0.01);
+                    folder.roty = folder.add(clone.rotation, 'y', -Math.PI, Math.PI).name('Y Rotation').step(0.01);
                     
                     // Add button to replace GLB model
                     folder.add({
@@ -60,17 +64,65 @@ function PatchClone() {
                 } else {
                     folder = gui.__folders[clone.name];
                 }
-                let visible = folder.__controllers.find(controller => controller.property === 'visible');
-                visible.onChange((value) => {
+
+                // Load values from localStorage
+                const storedVisible = localStorage.getItem(`${clone.name}_visible`);
+                if (storedVisible !== null) {
+                    clone.visible = storedVisible === 'true';
+                }
+                const storedSize = localStorage.getItem(`${clone.name}_size`);
+                if (storedSize !== null) {
+                    clone.size = parseFloat(storedSize);
+                    clone.scale.setScalar(originalSize * clone.size);
+                }
+                const storedPosX = localStorage.getItem(`${clone.name}_posx`);
+                if (storedPosX !== null) {
+                    clone.position.x = parseFloat(storedPosX);
+                }
+                const storedPosY = localStorage.getItem(`${clone.name}_posy`);
+                if (storedPosY !== null) {
+                    clone.position.y = parseFloat(storedPosY);
+                }
+                const storedPosZ = localStorage.getItem(`${clone.name}_posz`);
+                if (storedPosZ !== null) {
+                    clone.position.z = parseFloat(storedPosZ);
+                }
+                const storedRotX = localStorage.getItem(`${clone.name}_rotx`);
+                if (storedRotX !== null) {
+                    clone.rotation.x = parseFloat(storedRotX);
+                }
+                const storedRotY = localStorage.getItem(`${clone.name}_roty`);
+                if (storedRotY !== null) {
+                    clone.rotation.y = parseFloat(storedRotY);
+                }
+
+                folder.visible.onChange((value) => {
                     clone.visible = value;
+                    localStorage.setItem(`${clone.name}_visible`, value);
                 });
-                let size = folder.__controllers.find(controller => controller.property === 'size');
-                size.onChange((value) => {
+                folder.size.onChange((value) => {
                     clone.scale.setScalar(originalSize * value);
+                    localStorage.setItem(`${clone.name}_size`, value);
                 });
-                let yOffset = folder.__controllers.find(controller => controller.property === 'y'); // Find Y offset controller
-                yOffset.onChange((value) => {
-                    clone.position.y =  value; // Apply Y offset
+                folder.posx.onChange((value) => {
+                    clone.position.x = value;
+                    localStorage.setItem(`${clone.name}_posx`, value);
+                });
+                folder.posy.onChange((value) => {
+                    clone.position.y = value;
+                    localStorage.setItem(`${clone.name}_posy`, value);
+                });
+                folder.posz.onChange((value) => {
+                    clone.position.z = value;
+                    localStorage.setItem(`${clone.name}_posz`, value);
+                });
+                folder.rotx.onChange((value) => {
+                    clone.rotation.x = value;
+                    localStorage.setItem(`${clone.name}_rotx`, value);
+                });
+                folder.roty.onChange((value) => {
+                    clone.rotation.y = value;
+                    localStorage.setItem(`${clone.name}_roty`, value);
                 });
             }
 
@@ -174,6 +226,13 @@ var glbFiles = {};
 
             if (!/(airplane|boxman|car|heli|world|airplane|notfound)\.glb/.test(url))
                 glbFiles[url] = { name: url, content: content };
+            // Enable shadows for the loaded model
+            gltf.scene.traverse((node) => {
+                if (node.isMesh) {
+                    node.castShadow = true;
+                    node.receiveShadow = true;
+                }
+            });
             // Call the original onLoad with the modified gltf
             if (onLoad) onLoad(gltf);
 

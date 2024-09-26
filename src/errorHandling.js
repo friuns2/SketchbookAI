@@ -4,10 +4,9 @@ let lastEvalCode = '';
 async function Eval(content) 
 {   
     
-    if(!content.trim())
+    if(!content?.trim())
     {
-        console.error("empty code");
-        return;
+        throw "empty code";
     }
     chat.variant.lastError = '';
     SetCode(content);
@@ -56,7 +55,8 @@ console.error = (...args) => {
     if (globalThis.chat) {
      //   if (settings?.enableBreakpoints)
          //   debugger;
-        let error = chat.variant.lastError = {
+     if(chat.variant)
+        chat.variant.lastError = {
             args: args,
             url: args.map(arg => arg.target?.responseURL).find(a => a),
             message: args.map(arg => {

@@ -131,7 +131,7 @@ input::-ms-reveal {
                 <div id="controls" class="panel-segment flex-bottom"></div>
             </div>
         </div>
-        <pre id="floating-code" class="floating-code" v-html="floatingCode" style="font-size: 6px; position: absolute;"></pre>
+        <pre id="floating-code" class="floating-code" v-html="floatingCode" style="font-size: 6px; position: absolute; width: 0px; height: 0px;"></pre>
         <div class="fixed" :class="
         (globalThis.isMobile ? 'top-4':'bottom-4' )
          + ' left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center'" :style="{ opacity: isCursorLocked ? 1 : 1 }">
@@ -142,7 +142,7 @@ input::-ms-reveal {
                     <button 
                         v-for="(variant, index) in variants" 
                         :key="index"
-                        :title="variant.lastError"
+                        :title="variant.lastError || variant.model"
                         @click="!variant.processing ? switchVariant(index) : null"
                         @contextmenu.prevent="copyCodeToClipboard(variant)"
                         class="mx-1 px-3 py-1 rounded-full text-sm font-semibold"
@@ -159,7 +159,7 @@ input::-ms-reveal {
                 </div>
                 <div class="flex items-center">
                     <div class="relative flex-grow">
-                        <input type="text" id="gpt-input" v-model="inputText" :placeholder="params.lastText || 'What would you like to create?'" class="input input-bordered w-full max-w-xs pr-10" list="suggestions" @keydown.enter="sendInput" />
+                        <input type="text" id="gpt-input" v-model="inputText" :placeholder="params.lastText || 'What would you like to create?'" class="input input-bordered w-full max-w-xs pr-10" list="suggestions" @keydown.enter=" sendInput()" />
                         <datalist id="suggestions">
                             <option v-for="suggestion in suggestions" :key="suggestion" :value="suggestion"></option>
                         </datalist>

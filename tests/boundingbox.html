@@ -105,7 +105,7 @@
             // Register the KHR_materials_pbrSpecularGlossiness extension
             loader.register(parser => new GLTFMaterialsPbrSpecularGlossinessExtension(parser));
 
-            loader.load('../build/assets/boxman.glb', function (gltf) {
+            loader.load('apple.glb', function (gltf) {
                 model = gltf.scene;
                 model.traverse((child) => {
                     if (child.isMesh) {
@@ -113,16 +113,7 @@
                         child.castShadow = true;
                         child.receiveShadow = true;
 
-                        // Create and assign textured toon material
-                        const toonMaterial = new THREE.MeshToonMaterial({
-                            color: 0xcccccc, // Light gray color
-                            gradientMap: new THREE.TextureLoader().load('path/to/gradientMap.png')
-                        });
-
-                        // If the material doesn't have a map (diffuse texture), set the toon material
-                        if (!child.material.map) {
-                            child.material = toonMaterial;
-                        }
+                     
                     }
                 });
                 model.updateMatrixWorld(true);

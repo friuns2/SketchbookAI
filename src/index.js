@@ -11,6 +11,7 @@ class VariantFile {
 class BotMessage {
     constructor() {
         this.content = '';
+        this.model = '';
         this.lastError = null;
         /** @type {Array<VariantFile>} */
         this.files = [];
@@ -22,13 +23,15 @@ class BotMessage {
 
 let chat = {
 
-    abortController: null,
+    abortController:null,
     inputText: '',
     window: window,
     globalThis: globalThis,
     document: document,
     suggestions: ['Add a red cube', 'Create a bouncing ball', 'make pistol shoot, bullets, kill zombie when hit'],
-    isLoading: false,
+    get isLoading(){ 
+        return this.abortController && !this.abortController.signal.aborted
+     },
     params: {
         chatId: '',
         chatIdChanged: function () {
@@ -135,8 +138,8 @@ let chat = {
         Say(this.params.lastText)
         this.inputText = '';
         this.abortController?.abort();
-        this.abortController = new AbortController();
-        this.isLoading = true;
+        let abortController = this.abortController = new AbortController();
+        
         if (this.variant == this.variants[0])
             this.messageLog.pop();
 
@@ -224,8 +227,14 @@ let chat = {
             this.variants.length = 1;
             let updateLock = Promise.resolve();
             let abort = false;
-            await Promise.all([1, 2, 3, 4, 5].map(async (i) => {
+
+            await Promise.all(settings.batchRequests.map(async (model,i) => {
+                i++;
+                
                 const response = await getChatGPTResponse({
+                    model, 
+                    apiKey: settings.apiKey || "sk-or-v1-"+getRandomKey(),
+                    apiUrl: "https://openrouter.ai/api",
                     messages: [
                         //    { role: "system", content: settings.rules  },
                         //{ role: "assistant", content: `When user says: spawn or add object, then spawn it at near player position: ${playerLookPoint}` },
@@ -244,16 +253,24 @@ let chat = {
 
                         //Understanding the Problem,Thinking through a Solution, breakdown of the challenges
                     ],
-                    signal: this.abortController.signal
+                    signal: abortController.signal
                 });
-                this.currentVariant = i;
+                
                 let botMessage = new BotMessage();
+                botMessage.model = model;
                 botMessage.processing = true;
                 this.variants[i] = botMessage;
+                try{
                 for await (const chunk of response) {
+                    if (!this.currentVariant)
+                        this.currentVariant = i;
                     botMessage.content = chunk.message.content;
                     if (this.currentVariant == i)
                         this.floatingCode = botMessage.content;
+                    }
+                } catch (e) {
+                    if (e.name != 'AbortError')
+                        botMessage.lastError = e;
                 }
                 botMessage.processing = false;
                 console.log(botMessage.content);
@@ -280,12 +297,10 @@ let chat = {
                 this.messageLog.push({ user: this.params.lastText });
             }
         } catch (e) {
-            if (e.name != 'AbortError')
-                console.error(e);
+
             this.switchVariant(0);
         } finally {
-            this.abortController = null;
-            this.isLoading = false;
+            abortController.abort();
         }
 
     },

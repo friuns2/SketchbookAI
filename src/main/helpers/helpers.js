@@ -2,7 +2,6 @@ var Utils = Utils || {};
 
 
 function addMethodListener(object, methodName, extension) {
-    methodName = methodName.name?.replaceAll("bound ", "") ?? methodName;
     const originalMethod = object[methodName]//.bind(object);
     snapshot.reset.push(() => {
         object[methodName] = originalMethod;
@@ -69,8 +68,8 @@ class BaseObject extends THREE.Object3D {
     constructor(model, mass = 1, colliderMeshType = mass > 0 ? 'box' : 'none', type = mass > 0 ? CANNON.Body.DYNAMIC : CANNON.Body.STATIC) {
         super();
         
-        model = model.clone();
         const bbox = new THREE.Box3().setFromObject(model);
+        model = model.clone();
 
         const size = bbox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
         this.centerOffset = new THREE.Vector3();        
@@ -217,7 +216,7 @@ class BaseObject extends THREE.Object3D {
  */
 function AutoScaleInMeters(model, approximateSizeInMeters = 1) {
 
-    approximateSizeInMeters += 5;
+    approximateSizeInMeters *= 1.5;
     // Create a single bounding box for all objects combined
     const boundingBox = new THREE.Box3();
 

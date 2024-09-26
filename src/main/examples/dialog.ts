@@ -117,6 +117,6 @@ interactableObjects.push({
     position: aalking.position
 });
 
-addMethodListener(world, world.update, () => {
+addMethodListener(world, "update", () => {
     TWEEN.update();
 });

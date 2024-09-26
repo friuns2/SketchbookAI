@@ -16,7 +16,7 @@ document.body.appendChild(textPrompt);
 const playerModel = await loadAsync('build/assets/boxman.glb');
 expose(playerModel.scene, "player");
 AutoScaleInMeters(playerModel.scene, 1.7);
-addMethodListener(world, world.update, () => {
+addMethodListener(world, "update", () => {
     TWEEN.update();
 });
 

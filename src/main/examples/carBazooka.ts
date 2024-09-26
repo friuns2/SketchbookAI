@@ -19,7 +19,7 @@ let player: Player;
 // IMPORTANT: Always use function expose(variable: any, name: string) to expose the parameters to GUI
 // IMPORTANT: Assign animation names like this: animationsMapping.idle = Idle animation name from glb etc...
 
-addMethodListener(world, world.update, () => {
+addMethodListener(world, "update", () => {
     TWEEN.update();
 });
 
