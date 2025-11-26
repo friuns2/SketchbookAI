@@ -82,13 +82,16 @@ export class World
 			});
 		}
 
+		// Load settings early, before initializing renderer and sky
+		this.loadSettings();
+
 		// Renderer
 		this.renderer = new THREE.WebGLRenderer();
 		this.renderer.setPixelRatio(window.devicePixelRatio);
 		this.renderer.setSize(window.innerWidth, window.innerHeight);
 		this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 		this.renderer.toneMappingExposure = 1.0;
-		this.renderer.shadowMap.enabled = !globalThis.isMobile;
+		this.renderer.shadowMap.enabled = this.params.Shadows;
 		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 		this.generateHTML();
@@ -512,11 +515,10 @@ export class World
 		this.renderer.domElement.id = 'canvas';
 	}
 	public gui : dat.GUI;
-	private createParamsGUI(scope: World): void
+	
+	private loadSettings(): void
 	{
-		
-
-				
+		// Default settings
 		this.params = {
 			Pointer_Lock: true,
 			Mouse_Sensitivity: 0.3,
@@ -529,6 +531,31 @@ export class World
 			Sun_Rotation: 145,
 		};
 
+		// Load from localStorage if available
+		try {
+			const savedSettings = localStorage.getItem('sketchbook_settings');
+			if (savedSettings) {
+				const parsed = JSON.parse(savedSettings);
+				// Merge saved settings with defaults
+				Object.assign(this.params, parsed);
+			}
+		} catch (e) {
+			console.warn('Failed to load settings from localStorage:', e);
+		}
+	}
+
+	private saveSettings(): void
+	{
+		try {
+			localStorage.setItem('sketchbook_settings', JSON.stringify(this.params));
+		} catch (e) {
+			console.warn('Failed to save settings to localStorage:', e);
+		}
+	}
+
+	private createParamsGUI(scope: World): void
+	{
+
 		const gui = globalThis.gui = this.gui = new dat.GUI();
 		
 
@@ -536,27 +563,42 @@ export class World
 		this.scenarioGUIFolder = gui.addFolder('Scenarios');
 		
 
+		// Apply shadow settings to renderer and CSM lights
+		this.renderer.shadowMap.enabled = this.params.Shadows;
+		if (this.sky && this.sky.csm) {
+			this.sky.csm.lights.forEach((light) => {
+				light.castShadow = this.params.Shadows;
+			});
+		}
+
 		// World
 		let worldFolder = gui.addFolder('World');
 		worldFolder.add(this.params, 'Time_Scale', 0, 1).listen()
 			.onChange((value) =>
 			{
 				scope.timeScaleTarget = value;
+				scope.saveSettings();
 			});
 		worldFolder.add(this.params, 'Sun_Elevation', 0, 180).listen()
 			.onChange((value) =>
 			{
 				scope.sky.phi = value;
+				scope.saveSettings();
 			});
 		worldFolder.add(this.params, 'Sun_Rotation', 0, 360).listen()
 			.onChange((value) =>
 			{
 				scope.sky.theta = value;
+				scope.saveSettings();
 			});
 
 		// Input
 		let settingsFolder = gui.addFolder('Settings');
-		settingsFolder.add(this.params, 'FXAA');
+		settingsFolder.add(this.params, 'FXAA')
+			.onChange(() =>
+			{
+				scope.saveSettings();
+			});
 		settingsFolder.add(this.params, 'Shadows')
 			.onChange((enabled) =>
 			{
@@ -572,16 +614,19 @@ export class World
 						light.castShadow = false;
 					});
 				}
+				scope.saveSettings();
 			});
 		settingsFolder.add(this.params, 'Pointer_Lock')
 			.onChange((enabled) =>
 			{
 				scope.inputManager.setPointerLock(enabled);
+				scope.saveSettings();
 			});
 		settingsFolder.add(this.params, 'Mouse_Sensitivity', 0, 1)
 			.onChange((value) =>
 			{
 				scope.cameraOperator.setSensitivity(value, value * 0.8);
+				scope.saveSettings();
 			});
 		settingsFolder.add(this.params, 'Debug_Physics')
 			.onChange((enabled) =>
@@ -600,11 +645,13 @@ export class World
 				{
 					char.raycastBox.visible = enabled;
 				});
+				scope.saveSettings();
 			});
 		settingsFolder.add(this.params, 'Debug_FPS')
 			.onChange((enabled) =>
 			{
 				UIManager.setFPSVisible(enabled);
+				scope.saveSettings();
 			});
 
 		gui.open();

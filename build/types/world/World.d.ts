@@ -70,5 +70,7 @@ export declare class World {
     updateControls(controls: any): void;
     private generateHTML;
     gui: dat.GUI;
+    private loadSettings;
+    private saveSettings;
     private createParamsGUI;
 }
