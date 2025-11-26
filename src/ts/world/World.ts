@@ -198,7 +198,7 @@ export class World
 				}
 			//}, 1000 / 60); // 20 FPS
 		};
-		globalThis.SaveState?.();
+
 		animate();
 	}
 
@@ -523,8 +523,8 @@ export class World
 			Pointer_Lock: true,
 			Mouse_Sensitivity: 0.3,
 			Time_Scale: 1,
-			Shadows: !globalThis.isMobile,
-			FXAA: !globalThis.isMobile,
+			Shadows: !(window.innerWidth <= 800),
+			FXAA: !(window.innerWidth <= 800),
 			Debug_Physics: false,
 			Debug_FPS: false,
 			Sun_Elevation: 50,
@@ -589,7 +589,7 @@ export class World
 	private createParamsGUI(scope: World): void
 	{
 
-		const gui = globalThis.gui = this.gui = new dat.GUI();
+		const gui = this.gui = new dat.GUI();
 		
 		// Code Editor Controls
 		let editorFolder = gui.addFolder('Code Editor');

@@ -72,5 +72,6 @@ export declare class World {
     gui: dat.GUI;
     private loadSettings;
     private saveSettings;
+    private addCodeEditorControls;
     private createParamsGUI;
 }

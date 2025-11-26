@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
     entry: {
-        app: './src/ts/sketchbook.js'
+        app: './src/ts/main.ts'
     },
     output: {
         filename: './build/sketchbook.min.js',
