@@ -112,6 +112,53 @@ input::-ms-reveal {
     .suggestion-bubble:hover {
         background-color: #e0e0e0;
     }
+    /* Hide original code editor buttons */
+    #toggleEditor, #runCode {
+        display: none !important;
+    }
+    /* Editor menu bar styles */
+    #editorMenuBar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 40px;
+        background-color: #1e1e1e;
+        border-bottom: 1px solid #3c3c3c;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        z-index: 1000;
+        gap: 10px;
+    }
+    #editorMenuBar button {
+        background-color: #0e639c;
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background-color 0.2s;
+    }
+    #editorMenuBar button:hover {
+        background-color: #1177bb;
+    }
+    #editorMenuBar button.quit-btn {
+        background-color: #d13438;
+    }
+    #editorMenuBar button.quit-btn:hover {
+        background-color: #e81123;
+    }
+    #editorMenuBar .editor-title {
+        color: #cccccc;
+        font-size: 14px;
+        margin-left: 10px;
+        flex-grow: 1;
+    }
 </style>
 <body class="relative bg-gray-100" >
     <div id="app" tabindex="-1" style="outline: none;" @keydown="event => { if (!['INPUT', 'TEXTAREA'].includes(event.target.tagName)) event.preventDefault(); }">
@@ -200,7 +247,20 @@ input::-ms-reveal {
         <button id="runCode" class="fixed top-28 right-4 transform bg-transparent border-none z-50" @click="runCode">
             <i class="fas fa-play" style="font-size: 24px; color: #000;"></i>
         </button>
-        <div id="editorElement" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;" v-show="showEditor"></div>
+        <div v-show="showEditor">
+            <div id="editorMenuBar">
+                <button @click="runCode" title="Run Code (Ctrl+Enter)">
+                    <i class="fas fa-play"></i>
+                    <span>Run</span>
+                </button>
+                <button @click="toggleEditor" class="quit-btn" title="Close Editor">
+                    <i class="fas fa-times"></i>
+                    <span>Quit</span>
+                </button>
+                <span class="editor-title">Code Editor</span>
+            </div>
+            <div id="editorElement" style="position: fixed; top: 40px; left: 0; width: 100%; height: calc(100% - 40px);"></div>
+        </div>
     </div>
     <script src="https://unpkg.com/typescript@latest/lib/typescript.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>

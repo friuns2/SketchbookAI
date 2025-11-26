@@ -6,7 +6,7 @@ require.config({
 
 var codeEditor;
 
-new Vue({
+window.editorApp = new Vue({
     el: '#editorApp',
     data: {
         showEditor: true,
@@ -57,6 +57,11 @@ new Vue({
                     //readOnly: globalThis.isMobile, // Make editor readonly if on mobile
                     // Add the following line to disable the F12 key override
                    // contextmenu: false,
+                });
+                
+                // Add keyboard shortcut for running code (Ctrl+Enter)
+                codeEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+                    this.runCode();
                 });
                 
 

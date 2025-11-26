@@ -553,11 +553,48 @@ export class World
 		}
 	}
 
+	private addCodeEditorControls(folder: any): void
+	{
+		// Create a custom HTML element for the buttons
+		const customRow = document.createElement('li');
+		customRow.className = 'save-row';
+		customRow.style.display = 'flex';
+		customRow.style.justifyContent = 'space-between';
+		customRow.style.padding = '5px';
+		customRow.style.gap = '5px';
+
+		// Toggle Editor button
+		const toggleBtn = document.createElement('button');
+		toggleBtn.innerHTML = '<i class="fas fa-code"></i> Toggle Editor';
+		toggleBtn.className = 'button';
+		toggleBtn.style.flex = '1';
+		toggleBtn.style.padding = '8px';
+		toggleBtn.style.cursor = 'pointer';
+		toggleBtn.style.backgroundColor = '#3c3c3c';
+		toggleBtn.style.color = '#ddd';
+		toggleBtn.style.border = 'none';
+		toggleBtn.style.borderRadius = '3px';
+		toggleBtn.onclick = () => {
+			const editorApp = (window as any).editorApp;
+			if (editorApp) editorApp.toggleEditor();
+		};
+
+		customRow.appendChild(toggleBtn);
+
+		// Add the custom row to the folder
+		const folderElement = folder.__ul;
+		folderElement.appendChild(customRow);
+	}
+
 	private createParamsGUI(scope: World): void
 	{
 
 		const gui = globalThis.gui = this.gui = new dat.GUI();
 		
+		// Code Editor Controls
+		let editorFolder = gui.addFolder('Code Editor');
+		this.addCodeEditorControls(editorFolder);
+		editorFolder.open();
 
 		// Scenario
 		this.scenarioGUIFolder = gui.addFolder('Scenarios');
@@ -602,18 +639,18 @@ export class World
 		settingsFolder.add(this.params, 'Shadows')
 			.onChange((enabled) =>
 			{
-				if (enabled)
+				// Update renderer shadow map
+				scope.renderer.shadowMap.enabled = enabled;
+				scope.renderer.shadowMap.needsUpdate = true;
+				
+				// Update CSM lights
+				if (scope.sky && scope.sky.csm)
 				{
-					this.sky.csm.lights.forEach((light) => {
-						light.castShadow = true;
+					scope.sky.csm.lights.forEach((light) => {
+						light.castShadow = enabled;
 					});
 				}
-				else
-				{
-					this.sky.csm.lights.forEach((light) => {
-						light.castShadow = false;
-					});
-				}
+				
 				scope.saveSettings();
 			});
 		settingsFolder.add(this.params, 'Pointer_Lock')
