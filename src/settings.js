@@ -3,19 +3,16 @@ globalThis.isLocal = window.location.hostname === "localhost";
 
 
 let settings = {
-    
-    apiKey: "",
+
+    apiKey: "sk-XyMEqVpNCa0YtYDE3u9MLlNvO5R28tbHaM2J629rzDE5LZnjhweCR4M20dbMKbcX",
+    apiUrl: "https://opencode-cors-proxy.brutal.workers.dev",
     enableBreakpoints:false,
-    model: { selected: "gemini-1.5-flash-latest", options: ["gemini-1.5-pro-exp-0801", "gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gpt-4o-mini"] },
     localSrc: "C:/Users/friuns/Documents/Sketchbook/src/main/examples",
     codeFile:  "./main/examples/module.ts" ,
     batchRequests:[
-        "google/gemini-flash-1.5-exp",
-        "google/gemini-flash-1.5-exp",
-        "google/gemini-flash-1.5-exp",
-        "google/gemini-pro-1.5-exp",
-        "google/gemini-pro-1.5-exp",
-        "nousresearch/hermes-3-llama-3.1-405b:free"
+        "grok-code",
+        "big-pickle",
+        "grok-code"
     ]
 /*
     rules: `You will help write javascript code for a 3D game. 

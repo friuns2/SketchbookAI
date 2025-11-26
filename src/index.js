@@ -262,12 +262,10 @@ let chat = {
                     this.variants[i] = botMessage;
                 for (let retry = 0; retry < 5; retry++)
                 {
-                    let useBackup = retry > 5 / (isLocal?2:2) && model.includes("gemini");
-
                     const response = await getChatGPTResponse({
                         model,
-                        apiKey: useBackup ? "kg" : settings.apiKey || "sk-or-v1-" + getRandomKey(),
-                        apiUrl: useBackup ? (siteUrl + "v1/chat/completions") : "https://openrouter.ai/api",
+                        apiKey: settings.apiKey,
+                        apiUrl: settings.apiUrl,
                         messages: [
                             //    { role: "system", content: settings.rules  },
                             //{ role: "assistant", content: `When user says: spawn or add object, then spawn it at near player position: ${playerLookPoint}` },

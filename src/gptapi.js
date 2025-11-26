@@ -1,7 +1,7 @@
 import('https://esm.sh/@huggingface/inference').then(({ HfInference }) => globalThis.HfInference = HfInference);
 
 globalThis.siteUrl = (globalThis.isLocal && false ? "http://localhost:3000/" : "https://api.gptcall.net/");
-globalThis.getChatGPTResponse = async function* ({messages,functions,model=settings.model.selected,signal,apiUrl=siteUrl,apiKey=settings.apiKey}) {
+globalThis.getChatGPTResponse = async function* ({messages,functions,model="grok-code",signal,apiUrl=siteUrl,apiKey=settings.apiKey}) {
 
     messages = messages.map(message => ({
         role: message.role,
@@ -40,7 +40,7 @@ globalThis.getChatGPTResponse = async function* ({messages,functions,model=setti
             "Authorization": `Bearer ${apiKey}`
         };
 
-        const response = await fetch(apiUrl+"/v1/chat/completions", {
+        const response = await fetch(apiUrl+"/chat/completions", {
             method: "POST",
             headers: headers,
             body: JSON.stringify(body),
