@@ -584,6 +584,64 @@ export class World
 		// Add the custom row to the folder
 		const folderElement = folder.__ul;
 		folderElement.appendChild(customRow);
+
+		// Add templates submenu
+		const templatesFolder = folder.addFolder('Templates');
+
+		// Fetch and populate templates
+		fetch('paths.txt')
+			.then(response => response.text())
+			.then(text => {
+				const files = text.split('\n')
+					.map(line => line.trim())
+					.filter(line => line.includes('src/main/examples/') || line.includes('src\\main\\examples\\'))
+					.filter(line => line.endsWith('.ts') || line.endsWith('.js'));
+
+				files.forEach(file => {
+					// Extract filename without path and extension
+					const fileName = file.split(/[/\\]/).pop();
+
+					const params = {
+						[fileName]: () => {
+							fetch(file)
+								.then(response => response.text())
+								.then(content => {
+									const chat = (globalThis as any).chat;
+									if (chat) {
+										// Switch to variant 1 (Page 1)
+										if (chat.switchVariant) {
+											chat.switchVariant(1);
+										}
+
+										// Ensure variant 1 has files
+										if (chat.variants && chat.variants[1]) {
+											if (!chat.variants[1].files || chat.variants[1].files.length === 0) {
+												// Initialize files if missing (using VariantFile class if available, or mock object)
+												chat.variants[1].files = [{ name: 'script.js', content: '' }];
+											}
+											chat.variants[1].files[0].content = content;
+										}
+									}
+
+									// Update editor UI if available
+									if ((globalThis as any).SetCode) {
+										(globalThis as any).SetCode(content);
+									}
+
+									// Execute code
+									if ((globalThis as any).Eval) {
+										// Small delay to ensure editor update doesn't conflict
+										setTimeout(() => (globalThis as any).Eval(content), 100);
+									}
+								})
+								.catch(err => console.error('Error loading template:', err));
+						}
+					};
+
+					templatesFolder.add(params, fileName);
+				});
+			})
+			.catch(err => console.error('Error loading paths.txt:', err));
 	}
 
 	private createParamsGUI(scope: World): void
