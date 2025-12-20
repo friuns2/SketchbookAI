@@ -26,6 +26,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to Netlify
+        id: netlify-deploy
         uses: nwtgck/actions-netlify@v3.0
         with:
           publish-dir: '.'
@@ -40,3 +41,5 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         timeout-minutes: 1
 
+      - name: Deployment Summary
+        run: echo "🚀 Deployed to ${{ steps.netlify-deploy.outputs.deploy-url }}"
