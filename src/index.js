@@ -58,7 +58,7 @@ let chat = {
         return window.innerWidth < 768;
     },
     variants: [new BotMessage(), new BotMessage()],
-    currentVariant: 0,
+    currentVariant: 1,
     get variant() {
         return this.variants[this.currentVariant];
     },
