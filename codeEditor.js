@@ -10,9 +10,12 @@ window.editorApp = new Vue({
     el: '#editorApp',
     data: {
         showEditor: true,
+        showTemplates: false,
+        templates: [],
     },
     mounted() {
         this.initializeEditor();
+        this.loadTemplates();
         // Add event listener for window resize
         window.addEventListener('resize', this.resizeEditor);
     },
@@ -90,6 +93,64 @@ window.editorApp = new Vue({
         resizeEditor() {
             if (codeEditor && this.showEditor) {
                 codeEditor.layout();
+            }
+        },
+        toggleTemplates() {
+            this.showTemplates = !this.showTemplates;
+        },
+        async loadTemplates() {
+            try {
+                const response = await fetch('src/main/examples/');
+                if (!response.ok) throw new Error('Failed to fetch examples');
+                const text = await response.text();
+                // Assuming it's a directory listing, parse file names
+                // Since fetch on directory might not work, let's hardcode for now
+                this.templates = [
+                    '2player.ts',
+                    'carBazooka.ts',
+                    'carExample.ts',
+                    'codeTemplate.ts',
+                    'dialog.ts',
+                    'football.ts',
+                    'minecraft.ts',
+                    'module.ts',
+                    'npcs.ts',
+                    'pistol.ts',
+                    'rocketLauncher.ts',
+                    'rootmotion.ts',
+                    'trees.ts'
+                ];
+            } catch (e) {
+                console.error(e);
+                // Fallback
+                this.templates = [
+                    '2player.ts',
+                    'carBazooka.ts',
+                    'carExample.ts',
+                    'codeTemplate.ts',
+                    'dialog.ts',
+                    'football.ts',
+                    'minecraft.ts',
+                    'module.ts',
+                    'npcs.ts',
+                    'pistol.ts',
+                    'rocketLauncher.ts',
+                    'rootmotion.ts',
+                    'trees.ts'
+                ];
+            }
+        },
+        async loadTemplate(templateName) {
+            try {
+                const response = await fetch(`src/main/examples/${templateName}`);
+                if (!response.ok) throw new Error('Failed to load template');
+                const code = await response.text();
+                SetCode(code);
+                this.showTemplates = false;
+                this.runCode();
+            } catch (e) {
+                console.error(e);
+                alert('Failed to load template: ' + templateName);
             }
         },
     }
