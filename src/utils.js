@@ -113,6 +113,17 @@ function InitVue(obj, args = {}) {
 
     }
 
+    // If no code blocks were found, treat the entire message as a code block
+    if (files.length === 0 && message.trim()) {
+        files.push({
+            name: "script.js",
+            content: message,
+            langauge: "javascript",
+            hidden: false
+        });
+        messageWithoutCodeBlocks = ""; // Clear the message since we're using it as code
+    }
+
     return { messageWithoutCodeBlocks, files };
 }
 class SeededRandom {
