@@ -253,6 +253,18 @@ input::-ms-reveal {
                     <i class="fas fa-play"></i>
                     <span>Run</span>
                 </button>
+                <div class="relative">
+                    <button @click="toggleTemplates" title="Load Templates" class="bg-blue-600 hover:bg-blue-700">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Templates</span>
+                        <i class="fas fa-chevron-down ml-1"></i>
+                    </button>
+                    <div v-show="showTemplates" class="absolute top-full left-0 bg-gray-900 text-white rounded shadow-lg mt-1 z-10 min-w-32">
+                        <button v-for="template in templates" :key="template" @click="loadTemplate(template)" class="block w-full text-left px-4 py-2 hover:bg-gray-700">
+                            {{ template.replace('.ts', '') }}
+                        </button>
+                    </div>
+                </div>
                 <button @click="toggleEditor" class="quit-btn" title="Close Editor">
                     <i class="fas fa-times"></i>
                     <span>Quit</span>
