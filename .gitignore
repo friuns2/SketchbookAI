@@ -10,3 +10,4 @@ blend
 /src/examples/diffs/
 /src/main/examples/diffs/
 sketchbook.min.js
+*.log

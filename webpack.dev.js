@@ -1,6 +1,7 @@
 const { merge } = require("webpack-merge");
 const common = require("./webpack.common.js");
 const path = require("path");
+const fs = require("fs");
 const crypto = require("crypto");
 
 // Calculate port based on directory path hash
@@ -25,6 +26,28 @@ module.exports = merge(common, {
     port: projectPort,
     static: {
       directory: path.join(__dirname),
+    },
+    setupMiddlewares: (middlewares, devServer) => {
+      if (!devServer) {
+        throw new Error("webpack-dev-server is not defined");
+      }
+
+      middlewares.unshift({
+        name: "examples-api",
+        path: "/api/examples",
+        middleware: (req, res) => {
+          const examplesDir = path.join(__dirname, "examples");
+          fs.readdir(examplesDir, (err, files) => {
+            if (err) {
+              res.status(500).send("Error reading examples directory");
+              return;
+            }
+            res.json(files.filter(file => file.endsWith(".ts")));
+          });
+        },
+      });
+
+      return middlewares;
     },
   },
 });

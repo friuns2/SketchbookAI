@@ -584,6 +584,34 @@ export class World
 		// Add the custom row to the folder
 		const folderElement = folder.__ul;
 		folderElement.appendChild(customRow);
+
+		// Templates submenu
+		const templatesFolder = folder.addFolder('Templates');
+		templatesFolder.open();
+
+		fetch('/api/examples')
+			.then(response => response.json())
+			.then(exampleFiles => {
+				exampleFiles.forEach(filename => {
+					const templateName = filename.replace('.ts', '');
+					const templateObject = {
+						[templateName]: async () => {
+							try {
+								const response = await fetch(`examples/${filename}`);
+								const code = await response.text();
+								const editorApp = (window as any).editorApp;
+								if (editorApp) {
+									(window as any).SetCode(code);
+									editorApp.runCode();
+								}
+							} catch (error) {
+								console.error(`Failed to load template: ${filename}`, error);
+							}
+						}
+					};
+					templatesFolder.add(templateObject, templateName);
+				});
+			});
 	}
 
 	private createParamsGUI(scope: World): void
