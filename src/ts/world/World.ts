@@ -32,6 +32,7 @@ import { Vehicle } from '../vehicles/Vehicle';
 import { Scenario } from './Scenario';
 import { Sky } from './Sky';
 import { Ocean } from './Ocean';
+import { templates } from './templates';
 
 export class World
 {
@@ -553,6 +554,16 @@ export class World
 		}
 	}
 
+	private waitForEditor(callback: () => void): void {
+		const interval = setInterval(() => {
+			const editorApp = (window as any).editorApp;
+			if (editorApp && editorApp.editor) {
+				clearInterval(interval);
+				callback();
+			}
+		}, 100);
+	}
+
 	private addCodeEditorControls(folder: any): void
 	{
 		// Create a custom HTML element for the buttons
@@ -584,6 +595,31 @@ export class World
 		// Add the custom row to the folder
 		const folderElement = folder.__ul;
 		folderElement.appendChild(customRow);
+
+		// Templates
+		const templatesFolder = folder.addFolder('Templates');
+		// templatesFolder.open();
+
+		templates.forEach(file => {
+			const templateName = file.replace(/\.(ts|js)$/, '');
+			const templateObject = {
+				[templateName]: () => {
+					fetch(`/src/main/examples/${file}`)
+						.then(response => response.text())
+						.then(code => {
+							const editorApp = (window as any).editorApp;
+							if (editorApp && editorApp.editor) {
+								editorApp.editor.setValue(code);
+								globalThis.Eval(code);
+							} else {
+								console.error('Editor not found');
+							}
+						})
+						.catch(error => console.error('Error loading template:', error));
+				}
+			};
+			templatesFolder.add(templateObject, templateName);
+		});
 	}
 
 	private createParamsGUI(scope: World): void
@@ -593,7 +629,9 @@ export class World
 		
 		// Code Editor Controls
 		let editorFolder = gui.addFolder('Code Editor');
-		this.addCodeEditorControls(editorFolder);
+		this.waitForEditor(() => {
+			this.addCodeEditorControls(editorFolder);
+		});
 		editorFolder.open();
 
 		// Scenario
